@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging.config import dictConfig
 
 from flask import Flask, abort, request
@@ -32,18 +32,6 @@ jobs = dict()
 def parse_datetime(date: str) -> datetime:
     exp = "%Y-%m-%dT%H:%M:%SZ"
     return datetime.strptime(date, exp)
-
-
-def prune_jobs():
-    # if the first job is older than 2 days, prune all jobs older than 2 days
-    # this might happen due to not completed jobs
-    if datetime.fromtimestamp(list(jobs.values())[0]) > datetime.now() - timedelta(
-        days=2
-    ):
-        app.logger.info("Pruning jobs")
-        for job_id, timestamp in jobs.items():
-            if (datetime.now() - datetime.fromtimestamp(timestamp)).days >= 2:
-                del jobs[job_id]
 
 
 def validate_origin_github() -> bool:
@@ -84,7 +72,6 @@ def process_workflow_job():
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
         msg = get_message(action, repository, job_id, workflow)
-        prune_jobs()
 
     elif action == "in_progress":
         job_requested = jobs.get(job_id)
@@ -106,8 +93,11 @@ def process_workflow_job():
             ).seconds
             # delete from memory
             del jobs[job_id]
-
         msg = get_message(action, repository, job_id, time_to_finish, workflow)
+    else:
+        app.logger.warning(f"Unknown action {action}, removing from memory")
+        if job_id in jobs:
+            del jobs[job_id]
 
     app.logger.info(msg)
     return True
