@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging.config import dictConfig
 
 from flask import Flask, abort, request
@@ -10,7 +10,7 @@ dictConfig(
         "version": 1,
         "formatters": {
             "default": {
-                "format": "[%(asctime)s]: %(levelname)s| %(message)s",
+                "format": "[%(asctime)s]: %(levelname)s | %(message)s",
             }
         },
         "handlers": {
@@ -34,18 +34,6 @@ def parse_datetime(date: str) -> datetime:
     return datetime.strptime(date, exp)
 
 
-def prune_jobs():
-    # if the first job is older than 2 days, prune all jobs older than 2 days
-    # this might happen due to not completed jobs
-    if datetime.fromtimestamp(list(jobs.values())[0]) > datetime.now() - timedelta(
-        days=2
-    ):
-        app.logger.info("Pruning jobs")
-        for job_id, timestamp in jobs.items():
-            if (datetime.now() - datetime.fromtimestamp(timestamp)).days >= 2:
-                del jobs[job_id]
-
-
 def validate_origin_github() -> bool:
     userAgent = request.headers.get("User-Agent")
     if not userAgent.startswith("GitHub-Hookshot"):
@@ -63,6 +51,14 @@ def validate_origin_github() -> bool:
     return True
 
 
+def get_message(*args):
+    msg = list()
+    for variable in args:
+        var_name = f"{variable=}".split("=")[0]
+        msg.append(f'{var_name}="{variable}"')
+    return " ".join(msg)
+
+
 def process_workflow_job():
     job = request.get_json()
 
@@ -75,8 +71,7 @@ def process_workflow_job():
     if action == "queued":
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
-        msg = f"{action=} {repository=} {workflow=} {job_id=}"
-        prune_jobs()
+        msg = get_message(action, repository, job_id, workflow)
 
     elif action == "in_progress":
         job_requested = jobs.get(job_id)
@@ -85,7 +80,7 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        msg = f"{action=} {repository=} {workflow=} {job_id=} {time_to_start=}"
+        msg = get_message(action, repository, job_id, time_to_start, workflow)
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -98,8 +93,11 @@ def process_workflow_job():
             ).seconds
             # delete from memory
             del jobs[job_id]
-
-        msg = f"{action=} {repository=} {workflow=} {job_id=} {time_to_finish=}"
+        msg = get_message(action, repository, job_id, time_to_finish, workflow)
+    else:
+        app.logger.warning(f"Unknown action {action}, removing from memory")
+        if job_id in jobs:
+            del jobs[job_id]
 
     app.logger.info(msg)
     return True
