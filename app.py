@@ -10,7 +10,7 @@ dictConfig(
         "version": 1,
         "formatters": {
             "default": {
-                "format": "[%(asctime)s]: %(levelname)s| %(message)s",
+                "format": "[%(asctime)s]: %(levelname)s | %(message)s",
             }
         },
         "handlers": {
@@ -75,7 +75,7 @@ def process_workflow_job():
     if action == "queued":
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
-        msg = f"{action=} {repository=} {workflow=} {job_id=}"
+        msg = f'{action=} {repository=} {job_id=} workflow="{workflow}"'
         prune_jobs()
 
     elif action == "in_progress":
@@ -85,7 +85,9 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        msg = f"{action=} {repository=} {workflow=} {job_id=} {time_to_start=}"
+        msg = (
+            f'{action=} {repository=} {job_id=} {time_to_start=} workflow="{workflow}"'
+        )
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -99,7 +101,9 @@ def process_workflow_job():
             # delete from memory
             del jobs[job_id]
 
-        msg = f"{action=} {repository=} {workflow=} {job_id=} {time_to_finish=}"
+        msg = (
+            f'{action=} {repository=} {job_id=} {time_to_finish=} workflow="{workflow}"'
+        )
 
     app.logger.info(msg)
     return True
