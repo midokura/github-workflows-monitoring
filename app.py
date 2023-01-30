@@ -63,6 +63,14 @@ def validate_origin_github() -> bool:
     return True
 
 
+def get_message(*args):
+    msg = ""
+    for variable in args:
+        var_name = f"{variable=}".split("=")[0]
+        msg += f'{var_name}="{variable}" '
+    return msg
+
+
 def process_workflow_job():
     job = request.get_json()
 
@@ -75,7 +83,7 @@ def process_workflow_job():
     if action == "queued":
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
-        msg = f'{action=} {repository=} {job_id=} workflow="{workflow}"'
+        msg = get_message(action, repository, job_id, workflow)
         prune_jobs()
 
     elif action == "in_progress":
@@ -85,9 +93,7 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        msg = (
-            f'{action=} {repository=} {job_id=} {time_to_start=} workflow="{workflow}"'
-        )
+        msg = get_message(action, repository, job_id, time_to_start, workflow)
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -101,9 +107,7 @@ def process_workflow_job():
             # delete from memory
             del jobs[job_id]
 
-        msg = (
-            f'{action=} {repository=} {job_id=} {time_to_finish=} workflow="{workflow}"'
-        )
+        msg = get_message(action, repository, job_id, time_to_finish, workflow)
 
     app.logger.info(msg)
     return True
