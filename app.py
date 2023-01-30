@@ -12,21 +12,25 @@ app = Flask(__name__)
 
 jobs = dict()
 
-def validate_origin_github() -> bool:
+# check all calls are valid
+@app.before_request
+def validate_origin_github():
+    invalid = False
     userAgent = request.headers.get("User-Agent")
     if not userAgent.startswith("GitHub-Hookshot"):
         app.logger.warning("User-Agent is {userAgent}")
-        return False
+        invalid = True
 
     if request.headers.get("Content-Type") != "application/json":
         app.logger.warning("Content is not JSON")
-        return False
+        invalid = True
 
     if not request.headers.get(GithubHeaders.EVENT.value):
         app.logger.warning("No GitHub Event received!")
-        return False
+        invalid = True
 
-    return True
+    if invalid:
+        return abort(401)
 
 
 def process_workflow_job():
@@ -75,9 +79,6 @@ def process_workflow_job():
 
 @app.route("/github-webhook", methods=["POST"])
 def github_webhook_process():
-    if not validate_origin_github():
-        return abort(401)
-
     event = request.headers.get(GithubHeaders.EVENT.value)
     command = f"process_{event}"
 
