@@ -1,12 +1,12 @@
 from datetime import datetime
-import logging
+from logging.config import dictConfig
 
 from flask import Flask, abort, request
 
 from const import GithubHeaders, LOGGING_CONFIG
 from utils import get_message, parse_datetime
 
-logging.config.dictConfig(LOGGING_CONFIG)
+dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
 
