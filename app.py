@@ -1,28 +1,11 @@
 from datetime import datetime
-from logging.config import dictConfig
+import logging
 
 from flask import Flask, abort, request
 
-from const import GithubHeaders
+from const import GithubHeaders, LOGGING_CONFIG
 
-dictConfig(
-    {
-        "version": 1,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s]: %(levelname)s | %(message)s",
-            }
-        },
-        "handlers": {
-            "wsgi": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://flask.logging.wsgi_errors_stream",
-                "formatter": "default",
-            }
-        },
-        "root": {"level": "INFO", "handlers": ["wsgi"]},
-    }
-)
+logging.config.dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
 
