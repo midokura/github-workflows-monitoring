@@ -4,18 +4,13 @@ import logging
 from flask import Flask, abort, request
 
 from const import GithubHeaders, LOGGING_CONFIG
+from utils import get_message, parse_datetime
 
 logging.config.dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
 
 jobs = dict()
-
-
-def parse_datetime(date: str) -> datetime:
-    exp = "%Y-%m-%dT%H:%M:%SZ"
-    return datetime.strptime(date, exp)
-
 
 def validate_origin_github() -> bool:
     userAgent = request.headers.get("User-Agent")
@@ -32,14 +27,6 @@ def validate_origin_github() -> bool:
         return False
 
     return True
-
-
-def get_message(*args):
-    msg = list()
-    for variable in args:
-        var_name = f"{variable=}".split("=")[0]
-        msg.append(f'{var_name}="{variable}"')
-    return " ".join(msg)
 
 
 def process_workflow_job():
