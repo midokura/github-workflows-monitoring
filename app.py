@@ -52,11 +52,11 @@ def validate_origin_github() -> bool:
 
 
 def get_message(*args):
-    msg = ""
+    msg = list()
     for variable in args:
         var_name = f"{variable=}".split("=")[0]
-        msg += f'{var_name}="{variable}" '
-    return msg
+        msg.append(f'{var_name}="{variable}"')
+    return " ".join(msg)
 
 
 def process_workflow_job():
