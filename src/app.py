@@ -4,7 +4,7 @@ from logging.config import dictConfig
 from flask import Flask, abort, request
 
 from const import GithubHeaders, LOGGING_CONFIG
-from utils import get_message, parse_datetime
+from utils import parse_datetime
 
 dictConfig(LOGGING_CONFIG)
 
@@ -45,7 +45,10 @@ def process_workflow_job():
     if action == "queued":
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
-        msg = get_message(action, repository, job_id, workflow)
+        msg = (
+            f"action={action} repository={repository} job_id={job_id}"
+            f' workflow="{workflow}"'
+        )
 
     elif action == "in_progress":
         job_requested = jobs.get(job_id)
@@ -54,7 +57,10 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        msg = get_message(action, repository, job_id, time_to_start, workflow)
+        msg = (
+            f"action={action} repository={repository} job_id={job_id}"
+            f' workflow="{workflow}" time_to_start={time_to_start}'
+        )
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -67,7 +73,10 @@ def process_workflow_job():
             ).seconds
             # delete from memory
             del jobs[job_id]
-        msg = get_message(action, repository, job_id, time_to_finish, workflow)
+        msg = (
+            f"action={action} repository={repository} job_id={job_id}"
+            f' workflow="{workflow}" time_to_finish={time_to_finish}'
+        )
     else:
         app.logger.warning(f"Unknown action {action}, removing from memory")
         if job_id in jobs:
