@@ -36,7 +36,7 @@ def validate_origin_github():
 def process_workflow_job():
     job = request.get_json()
 
-    job_id = job["workflow_job"]["run_id"]
+    job_id = job["workflow_job"]["id"]
     workflow = job["workflow_job"]["workflow_name"]
     time_start = parse_datetime(job["workflow_job"]["started_at"])
     repository = job["repository"]["full_name"]
