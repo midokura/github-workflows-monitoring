@@ -18,7 +18,7 @@ def validate_origin_github():
     invalid = False
     userAgent = request.headers.get("User-Agent")
     if not userAgent.startswith("GitHub-Hookshot"):
-        app.logger.warning("User-Agent is {userAgent}")
+        app.logger.warning(f"User-Agent is {userAgent}")
         invalid = True
 
     if request.headers.get("Content-Type") != "application/json":
