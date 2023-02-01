@@ -10,6 +10,6 @@ def get_message(*args) -> str:
     """ Return variables as string logfmt """
     msg = list()
     for variable in args:
-        var_name = f"{variable=}".split("=")[0]
+        var_name = f"{variable=}".split("=")[1]
         msg.append(f'{var_name}="{variable}"')
     return " ".join(msg)
