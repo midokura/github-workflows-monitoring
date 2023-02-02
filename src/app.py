@@ -1,5 +1,7 @@
 from datetime import datetime
+import logging
 from logging.config import dictConfig
+import os
 
 from flask import Flask, abort, request
 
@@ -9,6 +11,13 @@ from utils import parse_datetime
 dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
+
+# set to WARNING to disable access log
+log = logging.getLogger("werkzeug")
+loglevel_flask = os.getenv("LOGLEVEL", "INFO")
+if hasattr(logging, loglevel_flask):
+    loglevel_flask = getattr(logging, loglevel_flask)
+    log.setLevel(loglevel_flask)
 
 jobs = dict()
 
