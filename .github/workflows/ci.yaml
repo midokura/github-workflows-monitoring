@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+    paths:
+    - "src/**"
   workflow_dispatch:
 
 jobs:
@@ -28,7 +30,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/nginx-webdav
+          images: ghcr.io/${{ github.repository_owner }}/github-workflows-monitoring
           tags: |
             type=ref,event=branch
             type=ref,event=pr
