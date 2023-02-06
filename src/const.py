@@ -13,7 +13,8 @@ LOGGING_CONFIG = {
     "version": 1,
     "formatters": {
         "default": {
-            "format": "[%(asctime)s]: %(levelname)s | %(message)s",
+            "format": "time=%(asctime)s.%(msecs)d level=%(levelname)s | %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
         }
     },
     "handlers": {
