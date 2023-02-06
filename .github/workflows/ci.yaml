@@ -5,12 +5,7 @@ on:
     branches:
       - main
   pull_request:
-    paths:
-    - "src/**"
   workflow_dispatch:
-
-permissions:
-  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -19,6 +14,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Login GHCR
