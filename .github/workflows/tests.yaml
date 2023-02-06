@@ -25,7 +25,7 @@ jobs:
           pip install -r tests/requirements.txt
       - name: Lint with flake8
         run: |
-          flake8 src/ tests/ --exit-zero --max-complexity=10 --max-line-length=120
+          flake8
       - name: Test with pytest
         run: |
           pytest --cov=src
