@@ -5,6 +5,7 @@ import os
 
 from flask import Flask, abort, request
 
+
 from const import GithubHeaders, LOGGING_CONFIG
 from utils import parse_datetime
 
@@ -20,6 +21,7 @@ if hasattr(logging, loglevel_flask):
     log.setLevel(loglevel_flask)
 
 jobs = dict()
+
 
 # check all calls are valid
 @app.before_request
@@ -90,8 +92,10 @@ def process_workflow_job():
         app.logger.warning(f"Unknown action {action}, removing from memory")
         if job_id in jobs:
             del jobs[job_id]
+        msg = None
 
-    app.logger.info(msg)
+    if msg:
+        app.logger.info(msg)
     return True
 
 
@@ -102,11 +106,7 @@ def github_webhook_process():
 
     if command == "process_workflow_job":
         app.logger.debug(f"Calling function {command}")
-        response = process_workflow_job()
-
-        if not response:
-            app.logger.error(f"Error calling {event} function")
-            return abort(500)
+        process_workflow_job()
         return "OK"
 
     app.logger.error(f"Unknown event type {event}, can't handle")
