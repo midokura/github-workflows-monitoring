@@ -9,6 +9,12 @@ on:
     - "src/**"
   workflow_dispatch:
 
+permissions:
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,12 +26,12 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
       - name: Set metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/github-workflows-monitoring
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/github-workflows-monitoring
           flavor: |
             latest=true
           tags: |
