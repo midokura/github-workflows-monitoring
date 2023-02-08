@@ -51,13 +51,20 @@ def process_workflow_job():
     workflow = job["workflow_job"]["workflow_name"]
     time_start = parse_datetime(job["workflow_job"]["started_at"])
     repository = job["repository"]["full_name"]
+    repository_private = job["repository"]["private"]
     action = job["action"]
+    conclusion = job["workflow_job"].get("conclusion")
+    requestor = job.get("sender", {}).get("login")
+    runner_name = job["workflow_job"]["runner_name"]
+    runner_group_name = job["workflow_job"]["runner_group_name"]
+    runner_public = (runner_group_name == "GitHub Actions")
 
     context_details = {
         "action": action,
         "repository": repository,
         "job_id": job_id,
         "workflow": workflow,
+        "requestor": requestor,
     }
 
     if action == "queued":
@@ -71,7 +78,14 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        context_details["time_to_start"] = time_to_start
+
+        extra_data = {
+            "time_to_start": time_to_start,
+            "runner_name": runner_name,
+            "runner_public": runner_public,
+            "repository_private": repository_private
+        }
+        context_details = {**context_details, **extra_data}
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -84,7 +98,12 @@ def process_workflow_job():
             ).seconds
             # delete from memory
             del jobs[job_id]
-        context_details["time_to_finish"] = time_to_finish
+
+        extra_data = {
+            "time_to_finish": time_to_finish,
+            "conclusion": conclusion
+        }
+        context_details = {**context_details, **extra_data}
     else:
         app.logger.warning(f"Unknown action {action}, removing from memory")
         if job_id in jobs:
