@@ -11,9 +11,22 @@ BODY = {
         "id": 0,
         "workflow_name": "CI",
         "started_at": "2023-01-27T14:00:00Z",
+        "conclusion": None,
+        "labels": [],
+        "runner_id": None,
+        "runner_name": None,
+        "runner_group_id": None,
+        "runner_group_name": None,
     },
     "repository": {
+        "name": "foo",
         "full_name": "foo/foo",
+        "private": False,
+    },
+    "sender": {
+        "login": "testerbot",
+        "id": 1,
+        "type": "User",
     },
 }
 
@@ -53,7 +66,8 @@ def test_started_job_not_stored(client, caplog):
     assert response.status_code == 200
     assert caplog.messages == [
         "Job 2 is in_progress but not stored!",
-        'action=in_progress repository=foo/foo job_id=2 workflow="CI" time_to_start=0',
+        'action=in_progress repository=foo/foo job_id=2 workflow=CI requestor=testerbot time_to_start=0 '
+        'runner_name= runner_public=false repository_private=false',
     ]
 
 
@@ -65,7 +79,7 @@ def test_finished_job_not_stored(client, caplog):
     assert response.status_code == 200
     assert caplog.messages == [
         "Job 3 is completed but not stored!",
-        'action=completed repository=foo/foo job_id=3 workflow="CI" time_to_finish=0',
+        'action=completed repository=foo/foo job_id=3 workflow=CI requestor=testerbot time_to_finish=0 conclusion=',
     ]
 
 
@@ -79,7 +93,7 @@ def test_unknown_action(client, caplog):
     response = client.post("/github-webhook", headers=HEADERS, json=body_failed)
     assert response.status_code == 200
     assert caplog.messages == [
-        'action=queued repository=foo/foo job_id=4 workflow="CI"',
+        'action=queued repository=foo/foo job_id=4 workflow=CI requestor=testerbot',
         "Unknown action failed, removing from memory",
     ]
 
@@ -91,7 +105,7 @@ def test_queued_job(client, caplog):
     response = client.post("/github-webhook", headers=HEADERS, json=body_queued)
     assert response.status_code == 200
     assert caplog.messages == [
-        'action=queued repository=foo/foo job_id=1 workflow="CI"'
+        'action=queued repository=foo/foo job_id=1 workflow=CI requestor=testerbot'
     ]
 
 
@@ -103,7 +117,7 @@ def test_logging_flow(client, caplog):
     response = client.post("/github-webhook", headers=HEADERS, json=body_queued)
     assert response.status_code == 200
     assert (
-        caplog.messages[0] == 'action=queued repository=foo/foo job_id=5 workflow="CI"'
+        caplog.messages[0] == 'action=queued repository=foo/foo job_id=5 workflow=CI requestor=testerbot'
     )
 
     body_started = BODY.copy()
@@ -113,15 +127,19 @@ def test_logging_flow(client, caplog):
     assert response.status_code == 200
     assert (
         caplog.messages[1]
-        == 'action=in_progress repository=foo/foo job_id=5 workflow="CI" time_to_start=5'
+        == 'action=in_progress repository=foo/foo job_id=5 workflow=CI requestor=testerbot time_to_start=5 '
+           'runner_name= runner_public=false repository_private=false'
+
     )
 
     body_completed = BODY.copy()
     body_completed["action"] = "completed"
+    body_completed["workflow_job"]["conclusion"] = "success"
     body_completed["workflow_job"]["completed_at"] = "2023-01-27T14:05:00Z"
     response = client.post("/github-webhook", headers=HEADERS, json=body_completed)
     assert response.status_code == 200
     assert (
         caplog.messages[2]
-        == 'action=completed repository=foo/foo job_id=5 workflow="CI" time_to_finish=295'
+        == 'action=completed repository=foo/foo job_id=5 workflow=CI requestor=testerbot '
+           'time_to_finish=295 conclusion=success'
     )
