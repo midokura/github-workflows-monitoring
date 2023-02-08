@@ -99,14 +99,19 @@ def process_workflow_job():
     return True
 
 
+allowed_events = {
+    "workflow_job": process_workflow_job
+}
+
+
 @app.route("/github-webhook", methods=["POST"])
 def github_webhook_process():
     event = request.headers.get(GithubHeaders.EVENT.value)
-    command = f"process_{event}"
 
-    if command == "process_workflow_job":
-        app.logger.debug(f"Calling function {command}")
-        process_workflow_job()
+    if event in allowed_events:
+        app.logger.debug(f"Calling function to process {event=}")
+        func = allowed_events.get(event)
+        func()
         return "OK"
 
     app.logger.error(f"Unknown event type {event}, can't handle")
