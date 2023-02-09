@@ -7,7 +7,7 @@ from flask import Flask, abort, request
 
 
 from const import GithubHeaders, LOGGING_CONFIG
-from utils import parse_datetime
+from utils import parse_datetime, dict_to_logfmt
 
 dictConfig(LOGGING_CONFIG)
 
@@ -51,15 +51,25 @@ def process_workflow_job():
     workflow = job["workflow_job"]["workflow_name"]
     time_start = parse_datetime(job["workflow_job"]["started_at"])
     repository = job["repository"]["full_name"]
+    repository_private = job["repository"]["private"]
     action = job["action"]
+    conclusion = job["workflow_job"].get("conclusion")
+    requestor = job.get("sender", {}).get("login")
+    runner_name = job["workflow_job"]["runner_name"]
+    runner_group_name = job["workflow_job"]["runner_group_name"]
+    runner_public = (runner_group_name == "GitHub Actions")
+
+    context_details = {
+        "action": action,
+        "repository": repository,
+        "job_id": job_id,
+        "workflow": workflow,
+        "requestor": requestor,
+    }
 
     if action == "queued":
         # add to memory as timestamp
         jobs[job_id] = int(time_start.timestamp())
-        msg = (
-            f"action={action} repository={repository} job_id={job_id}"
-            f' workflow="{workflow}"'
-        )
 
     elif action == "in_progress":
         job_requested = jobs.get(job_id)
@@ -68,10 +78,14 @@ def process_workflow_job():
             time_to_start = 0
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
-        msg = (
-            f"action={action} repository={repository} job_id={job_id}"
-            f' workflow="{workflow}" time_to_start={time_to_start}'
-        )
+
+        context_details = {
+            **context_details,
+            "time_to_start": time_to_start,
+            "runner_name": runner_name,
+            "runner_public": runner_public,
+            "repository_private": repository_private
+        }
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -84,29 +98,37 @@ def process_workflow_job():
             ).seconds
             # delete from memory
             del jobs[job_id]
-        msg = (
-            f"action={action} repository={repository} job_id={job_id}"
-            f' workflow="{workflow}" time_to_finish={time_to_finish}'
-        )
+
+        context_details = {
+            **context_details,
+            "time_to_finish": time_to_finish,
+            "conclusion": conclusion
+        }
+
     else:
         app.logger.warning(f"Unknown action {action}, removing from memory")
         if job_id in jobs:
             del jobs[job_id]
-        msg = None
+        context_details = None
 
-    if msg:
-        app.logger.info(msg)
+    if context_details:
+        app.logger.info(dict_to_logfmt(context_details))
     return True
+
+
+allowed_events = {
+    "workflow_job": process_workflow_job
+}
 
 
 @app.route("/github-webhook", methods=["POST"])
 def github_webhook_process():
     event = request.headers.get(GithubHeaders.EVENT.value)
-    command = f"process_{event}"
 
-    if command == "process_workflow_job":
-        app.logger.debug(f"Calling function {command}")
-        process_workflow_job()
+    if event in allowed_events:
+        app.logger.debug(f"Calling function to process {event=}")
+        func = allowed_events.get(event)
+        func()
         return "OK"
 
     app.logger.error(f"Unknown event type {event}, can't handle")
