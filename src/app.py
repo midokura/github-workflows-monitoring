@@ -79,13 +79,13 @@ def process_workflow_job():
         else:
             time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
 
-        extra_data = {
+        context_details = {
+            **context_details,
             "time_to_start": time_to_start,
             "runner_name": runner_name,
             "runner_public": runner_public,
             "repository_private": repository_private
         }
-        context_details = {**context_details, **extra_data}
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
@@ -99,11 +99,12 @@ def process_workflow_job():
             # delete from memory
             del jobs[job_id]
 
-        extra_data = {
+        context_details = {
+            **context_details,
             "time_to_finish": time_to_finish,
             "conclusion": conclusion
         }
-        context_details = {**context_details, **extra_data}
+
     else:
         app.logger.warning(f"Unknown action {action}, removing from memory")
         if job_id in jobs:
