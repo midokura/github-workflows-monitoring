@@ -57,7 +57,7 @@ def process_workflow_job():
     requestor = job.get("sender", {}).get("login")
     runner_name = job["workflow_job"]["runner_name"]
     runner_group_name = job["workflow_job"]["runner_group_name"]
-    runner_public = (runner_group_name == "GitHub Actions")
+    runner_public = runner_group_name == "GitHub Actions"
 
     context_details = {
         "action": action,
@@ -73,24 +73,32 @@ def process_workflow_job():
 
     elif action == "in_progress":
         job_requested = jobs.get(job_id)
+        time_to_start = None
         if not job_requested:
-            app.logger.warning(f"Job {job_id} is {action} but not stored!")
-            time_to_start = 0
+            app.logger.error(f"Job {job_id} is {action} but not stored!")
         else:
-            time_to_start = (time_start - datetime.fromtimestamp(job_requested)).seconds
+            if time_start < datetime.fromtimestamp(job_requested):
+                app.logger.error(f"Job {job_id} was in progress before being queued")
+                del jobs[job_id]
+            else:
+                time_to_start = (
+                    time_start - datetime.fromtimestamp(job_requested)
+                ).seconds
 
         context_details = {
             **context_details,
-            "time_to_start": time_to_start,
             "runner_name": runner_name,
             "runner_public": runner_public,
-            "repository_private": repository_private
+            "repository_private": repository_private,
         }
+
+        if time_to_start:
+            context_details["time_to_start"] = time_to_start
 
     elif action == "completed":
         job_requested = jobs.get(job_id)
         if not job_requested:
-            app.logger.warning(f"Job {job_id} is {action} but not stored!")
+            app.logger.error(f"Job {job_id} is {action} but not stored!")
             time_to_finish = 0
         else:
             time_to_finish = (
@@ -102,7 +110,7 @@ def process_workflow_job():
         context_details = {
             **context_details,
             "time_to_finish": time_to_finish,
-            "conclusion": conclusion
+            "conclusion": conclusion,
         }
 
     else:
@@ -116,9 +124,7 @@ def process_workflow_job():
     return True
 
 
-allowed_events = {
-    "workflow_job": process_workflow_job
-}
+allowed_events = {"workflow_job": process_workflow_job}
 
 
 @app.route("/github-webhook", methods=["POST"])
