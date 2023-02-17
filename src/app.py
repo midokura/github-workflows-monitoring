@@ -98,7 +98,7 @@ def process_workflow_job():
     elif action == "completed":
         job_requested = jobs.get(job_id)
         if not job_requested:
-            app.logger.error(f"Job {job_id} is {action} but not stored!")
+            app.logger.warning(f"Job {job_id} is {action} but not stored!")
             time_to_finish = 0
         else:
             time_to_finish = (
