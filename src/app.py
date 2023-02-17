@@ -75,7 +75,7 @@ def process_workflow_job():
         job_requested = jobs.get(job_id)
         time_to_start = None
         if not job_requested:
-            app.logger.error(f"Job {job_id} is {action} but not stored!")
+            app.logger.warning(f"Job {job_id} is {action} but not stored!")
         else:
             if time_start < datetime.fromtimestamp(job_requested):
                 app.logger.error(f"Job {job_id} was in progress before being queued")
