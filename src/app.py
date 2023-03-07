@@ -48,8 +48,11 @@ def process_workflow_job():
     job = request.get_json()
 
     job_id = job["workflow_job"]["id"]
+    run_id = job["workflow_job"]["run_id"]
+    job_name = job["workflow_job"]["name"]
     workflow = job["workflow_job"]["workflow_name"]
     time_start = parse_datetime(job["workflow_job"]["started_at"])
+    branch = job["workflow_job"].get("head_branch", "")
     repository = job["repository"]["full_name"]
     repository_private = job["repository"]["private"]
     action = job["action"]
@@ -62,7 +65,10 @@ def process_workflow_job():
     context_details = {
         "action": action,
         "repository": repository,
+        "branch": branch,
         "job_id": job_id,
+        "run_id": run_id,
+        "job_name": job_name,
         "workflow": workflow,
         "requestor": requestor,
     }
@@ -109,6 +115,7 @@ def process_workflow_job():
 
         context_details = {
             **context_details,
+            "runner_name": runner_name,
             "time_to_finish": time_to_finish,
             "conclusion": conclusion,
         }
