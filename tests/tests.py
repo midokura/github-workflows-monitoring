@@ -182,3 +182,18 @@ def test_logging_flow_queued_after_in_progress(client, caplog):
         "job_name=Build workflow=CI requestor=testerbot runner_name= runner_public=false "
         "repository_private=false"
     )
+
+
+def test_line_break_in_job_name(client, caplog):
+    body = BODY.copy()
+    body["action"] = "queued"
+    body["workflow_job"][
+        "name"
+    ] = "Build and push images (actions-runner-dind, NPROC=2\n, runner-images/devops/actions-runner-dind, l..."
+    response = client.post("/github-webhook", headers=HEADERS, json=body)
+    assert response.status_code == 200
+    assert caplog.messages == [
+        'action=queued repository=foo/foo branch=new-feature-branch job_id=6 run_id=10 job_name="Build and push '
+        'images (actions-runner-dind, NPROC=2 , runner-images/devops/actions-runner-dind, l..."'
+        ' workflow=CI requestor=testerbot'
+    ]

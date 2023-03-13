@@ -49,7 +49,7 @@ def process_workflow_job():
 
     job_id = job["workflow_job"]["id"]
     run_id = job["workflow_job"]["run_id"]
-    job_name = job["workflow_job"]["name"]
+    job_name = job["workflow_job"]["name"].replace("\n", " ")
     workflow = job["workflow_job"]["workflow_name"]
     time_start = parse_datetime(job["workflow_job"]["started_at"])
     branch = job["workflow_job"].get("head_branch", "")
