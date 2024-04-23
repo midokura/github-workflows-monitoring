@@ -142,7 +142,7 @@ def monitor_queued_jobs():
         return
 
     job_id, time_start = min(jobs.items(), key=lambda x: x[1])
-    delay = datetime.now().timestamp() - time_start
+    delay = int(datetime.now().timestamp() - time_start)
 
     if delay <= int(os.getenv("QUEUED_JOBS_DELAY_THRESHOLD", 150)):
         return
