@@ -131,7 +131,7 @@ def monitor_queued_jobs():
     if not jobs:
         return
 
-    queued_jobs = [job for job in jobs if job.action == "queued"]
+    queued_jobs = [job for job in jobs.values() if job.action == "queued"]
     job = min(queued_jobs, key=lambda x: x.time_start)
     delay = (datetime.now() - job.time_start).seconds
 
