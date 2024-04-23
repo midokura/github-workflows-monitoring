@@ -33,13 +33,15 @@ BODY = {
     },
 }
 
+HOOK_ENDPOINT = "/github-webhook"
+
 
 def test_method_not_allowed(client):
-    assert client.get("/github-webhook").status_code == 401
+    assert client.get(HOOK_ENDPOINT).status_code == 401
 
 
 def test_headers_not_correct(client, caplog):
-    response = client.post("/github-webhook", headers={'User-Agent': 'foo'})
+    response = client.post(HOOK_ENDPOINT, headers={'User-Agent': 'foo'})
     assert response.status_code == 401
     assert caplog.messages == [
         "User-Agent is foo",
@@ -49,14 +51,14 @@ def test_headers_not_correct(client, caplog):
 
 
 def test_no_body_bad_request(client):
-    response = client.post("/github-webhook", headers=HEADERS)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS)
     assert response.status_code == 400
 
 
 def test_unknown_event(client, caplog):
     headers = HEADERS.copy()
     headers[GithubHeaders.EVENT.value] = "foo"
-    response = client.post("/github-webhook", headers=headers, json={})
+    response = client.post(HOOK_ENDPOINT, headers=headers, json={})
     assert response.status_code == 405
     assert caplog.messages == ["Unknown event type foo, can't handle"]
 
@@ -65,7 +67,7 @@ def test_started_job_not_stored(client, caplog):
     body_started = BODY.copy()
     body_started["action"] = "in_progress"
     body_started["workflow_job"]["id"] = 2
-    response = client.post("/github-webhook", headers=HEADERS, json=body_started)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_started)
     assert response.status_code == 200
     assert caplog.messages == [
         "Job 2 is in_progress but not stored!",
@@ -79,7 +81,7 @@ def test_finished_job_not_stored(client, caplog):
     body_finished = BODY.copy()
     body_finished["action"] = "completed"
     body_finished["workflow_job"]["id"] = 3
-    response = client.post("/github-webhook", headers=HEADERS, json=body_finished)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_finished)
     assert response.status_code == 200
     assert caplog.messages == [
         "Job 3 is completed but not stored!",
@@ -92,10 +94,10 @@ def test_unknown_action(client, caplog):
     body_started = BODY.copy()
     body_started["action"] = "queued"
     body_started["workflow_job"]["id"] = 4
-    response = client.post("/github-webhook", headers=HEADERS, json=body_started)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_started)
     body_failed = body_started.copy()
     body_failed["action"] = "failed"
-    response = client.post("/github-webhook", headers=HEADERS, json=body_failed)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_failed)
     assert response.status_code == 200
     assert caplog.messages == [
         "action=queued repository=foo/foo branch=new-feature-branch job_id=4 run_id=10 "
@@ -108,7 +110,7 @@ def test_queued_job(client, caplog):
     body_queued = BODY.copy()
     body_queued["action"] = "queued"
     body_queued["workflow_job"]["id"] = 1
-    response = client.post("/github-webhook", headers=HEADERS, json=body_queued)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_queued)
     assert response.status_code == 200
     assert caplog.messages == [
         "action=queued repository=foo/foo branch=new-feature-branch job_id=1 run_id=10 "
@@ -121,7 +123,7 @@ def test_logging_flow(client, caplog):
     body_queued["action"] = "queued"
     body_queued["workflow_job"]["id"] = 5
 
-    response = client.post("/github-webhook", headers=HEADERS, json=body_queued)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_queued)
     assert response.status_code == 200
     assert (
         caplog.messages[0]
@@ -132,7 +134,7 @@ def test_logging_flow(client, caplog):
     body_started = BODY.copy()
     body_started["action"] = "in_progress"
     body_started["workflow_job"]["started_at"] = "2023-01-27T14:00:05Z"
-    response = client.post("/github-webhook", headers=HEADERS, json=body_started)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_started)
     assert response.status_code == 200
     assert (
         caplog.messages[1]
@@ -145,7 +147,7 @@ def test_logging_flow(client, caplog):
     body_completed["action"] = "completed"
     body_completed["workflow_job"]["conclusion"] = "success"
     body_completed["workflow_job"]["completed_at"] = "2023-01-27T14:05:00Z"
-    response = client.post("/github-webhook", headers=HEADERS, json=body_completed)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_completed)
     assert response.status_code == 200
     assert (
         caplog.messages[2]
@@ -161,7 +163,7 @@ def test_logging_flow_queued_after_in_progress(client, caplog):
     body_queued["workflow_job"]["id"] = 6
     body_queued["workflow_job"]["started_at"] = "2023-02-17T06:57:48Z"
 
-    response = client.post("/github-webhook", headers=HEADERS, json=body_queued)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_queued)
     assert response.status_code == 200
     assert (
         caplog.messages[0]
@@ -172,7 +174,7 @@ def test_logging_flow_queued_after_in_progress(client, caplog):
     body_started = BODY.copy()
     body_started["action"] = "in_progress"
     body_started["workflow_job"]["started_at"] = "2023-02-17T06:57:46Z"
-    response = client.post("/github-webhook", headers=HEADERS, json=body_started)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body_started)
 
     assert response.status_code == 200
     assert caplog.messages[1] == "Job 6 was in progress before being queued"
@@ -190,7 +192,7 @@ def test_line_break_in_job_name(client, caplog):
     body["workflow_job"][
         "name"
     ] = "Build and push images (actions-runner-dind, NPROC=2\n, runner-images/devops/actions-runner-dind, l..."
-    response = client.post("/github-webhook", headers=HEADERS, json=body)
+    response = client.post(HOOK_ENDPOINT, headers=HEADERS, json=body)
     assert response.status_code == 200
     assert caplog.messages == [
         'action=queued repository=foo/foo branch=new-feature-branch job_id=6 run_id=10 job_name="Build and push '
