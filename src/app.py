@@ -128,10 +128,14 @@ def process_workflow_job():
 def monitor_queued_jobs():
     """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")
+
     if not jobs:
         return
 
     queued_jobs = [job for job in jobs.values() if job.action == "queued"]
+    if not queued_jobs:
+        return
+
     job = min(queued_jobs, key=lambda x: x.time_start)
     delay = (datetime.now() - job.time_start).seconds
 
