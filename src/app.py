@@ -23,6 +23,7 @@ loglevel_flask = os.getenv("LOGLEVEL", "INFO")
 if hasattr(logging, loglevel_flask):
     loglevel_flask = getattr(logging, loglevel_flask)
     log.setLevel(loglevel_flask)
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 jobs = dict()
 
