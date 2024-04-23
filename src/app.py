@@ -8,7 +8,8 @@ from flask_apscheduler import APScheduler
 
 
 from const import GithubHeaders, LOGGING_CONFIG
-from utils import parse_datetime, dict_to_logfmt
+from github import GithubJob
+from utils import dict_to_logfmt
 
 dictConfig(LOGGING_CONFIG)
 
@@ -22,6 +23,7 @@ loglevel_flask = os.getenv("LOGLEVEL", "INFO")
 if hasattr(logging, loglevel_flask):
     loglevel_flask = getattr(logging, loglevel_flask)
     log.setLevel(loglevel_flask)
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 jobs = dict()
 
@@ -48,85 +50,73 @@ def validate_origin_github():
 
 
 def process_workflow_job():
-    job = request.get_json()
-
-    job_id = job["workflow_job"]["id"]
-    run_id = job["workflow_job"]["run_id"]
-    job_name = job["workflow_job"]["name"].replace("\n", " ")
-    workflow = job["workflow_job"]["workflow_name"]
-    time_start = parse_datetime(job["workflow_job"]["started_at"])
-    branch = job["workflow_job"].get("head_branch", "")
-    repository = job["repository"]["full_name"]
-    repository_private = job["repository"]["private"]
-    action = job["action"]
-    conclusion = job["workflow_job"].get("conclusion")
-    requestor = job.get("sender", {}).get("login")
-    runner_name = job["workflow_job"]["runner_name"]
-    runner_group_name = job["workflow_job"]["runner_group_name"]
-    runner_public = runner_group_name == "GitHub Actions"
+    job = GithubJob(request.get_json())
 
     context_details = {
-        "action": action,
-        "repository": repository,
-        "branch": branch,
-        "job_id": job_id,
-        "run_id": run_id,
-        "job_name": job_name,
-        "workflow": workflow,
-        "requestor": requestor,
+        "action": job.action,
+        "repository": job.repository,
+        "branch": job.branch,
+        "job_id": job.id,
+        "run_id": job.run_id,
+        "job_name": job.name,
+        "workflow": job.workflow,
+        "requestor": job.requestor,
     }
 
-    if action == "queued":
-        # add to memory as timestamp
-        jobs[job_id] = int(time_start.timestamp())
+    if job.action == "queued":
+        # add to memory
+        jobs[job.id] = job
 
-    elif action == "in_progress":
-        job_requested = jobs.get(job_id)
+    elif job.action == "in_progress":
+        job_requested = jobs.get(job.id)
         time_to_start = None
         if not job_requested:
-            app.logger.warning(f"Job {job_id} is {action} but not stored!")
+            app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
         else:
-            if time_start < datetime.fromtimestamp(job_requested):
-                app.logger.error(f"Job {job_id} was in progress before being queued")
-                del jobs[job_id]
+            if job.time_start < job_requested.time_start:
+                app.logger.error(f"Job {job.id} was in progress before being queued")
+                del jobs[job.id]
             else:
                 time_to_start = (
-                    time_start - datetime.fromtimestamp(job_requested)
+                    job.time_start - job_requested.time_start
                 ).seconds
 
         context_details = {
             **context_details,
-            "runner_name": runner_name,
-            "runner_public": runner_public,
-            "repository_private": repository_private,
+            "runner_name": job.runner_name,
+            "runner_public": job.runner_public,
+            "repository_private": job.repository_private,
         }
 
         if time_to_start:
             context_details["time_to_start"] = time_to_start
 
-    elif action == "completed":
-        job_requested = jobs.get(job_id)
+        # update job from memory
+        jobs[job.id] = job
+
+    elif job.action == "completed":
+        job_requested = jobs.get(job.id)
         if not job_requested:
-            app.logger.warning(f"Job {job_id} is {action} but not stored!")
+            app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
             time_to_finish = 0
         else:
             time_to_finish = (
-                parse_datetime(job["workflow_job"]["completed_at"]) - time_start
+                job.time_completed - job.time_start
             ).seconds
             # delete from memory
-            del jobs[job_id]
+            del jobs[job.id]
 
         context_details = {
             **context_details,
-            "runner_name": runner_name,
+            "runner_name": job.runner_name,
             "time_to_finish": time_to_finish,
-            "conclusion": conclusion,
+            "conclusion": job.conclusion,
         }
 
     else:
-        app.logger.warning(f"Unknown action {action}, removing from memory")
-        if job_id in jobs:
-            del jobs[job_id]
+        app.logger.warning(f"Unknown action {job.action}, removing from memory")
+        if job.id in jobs:
+            del jobs[job.id]
         context_details = None
 
     if context_details:
@@ -136,21 +126,24 @@ def process_workflow_job():
 
 @scheduler.task('interval', id='monitor_queued', seconds=30)
 def monitor_queued_jobs():
-    """ Return the job that has been queued and not starting for long time. """
+    """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")
     if not jobs:
         return
 
-    job_id, time_start = min(jobs.items(), key=lambda x: x[1])
-    delay = datetime.now().timestamp() - time_start
+    queued_jobs = [job for job in jobs if job.action == "queued"]
+    job = min(queued_jobs, key=lambda x: x.time_start)
+    delay = (datetime.now() - job.time_start).seconds
 
     if delay <= int(os.getenv("QUEUED_JOBS_DELAY_THRESHOLD", 150)):
         return
 
     context_details = {
         "action": "monitor_queued",
-        "job_id": job_id,
-        "started_at": time_start,
+        "job_id": job.id,
+        "job_name": job.name,
+        "repository": job.repository,
+        "started_at": job.time_start,
         "delay": delay,
     }
 
