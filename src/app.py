@@ -90,6 +90,9 @@ def process_workflow_job():
         if time_to_start:
             context_details["time_to_start"] = time_to_start
 
+        # update job from memory
+        jobs[job.id] = job
+
     elif job.action == "completed":
         job_requested = jobs.get(job.id)
         if not job_requested:
@@ -127,16 +130,18 @@ def monitor_queued_jobs():
     if not jobs:
         return
 
-    job_id, time_start = min(jobs.items(), key=lambda x: x[1])
-    delay = int(datetime.now().timestamp() - time_start)
+    job = min(jobs.values(), key=lambda x: x.time_start if x.action == "queued")
+    delay = int(datetime.now().timestamp() - job.time_start)
 
     if delay <= int(os.getenv("QUEUED_JOBS_DELAY_THRESHOLD", 150)):
         return
 
     context_details = {
         "action": "monitor_queued",
-        "job_id": job_id,
-        "started_at": time_start,
+        "job_id": job.id,
+        "job_name": job.name,
+        "repository": job.repository,
+        "started_at": job.time_start,
         "delay": delay,
     }
 
