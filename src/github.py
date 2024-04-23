@@ -1,5 +1,6 @@
 from utils import parse_datetime
 
+
 class GithubJob():
     def __init__(self, json_body: str):
         self.data = json_body

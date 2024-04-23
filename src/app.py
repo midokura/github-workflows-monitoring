@@ -9,7 +9,7 @@ from flask_apscheduler import APScheduler
 
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
-from utils import parse_datetime, dict_to_logfmt
+from utils import dict_to_logfmt
 
 dictConfig(LOGGING_CONFIG)
 
@@ -126,7 +126,7 @@ def process_workflow_job():
 
 @scheduler.task('interval', id='monitor_queued', seconds=30)
 def monitor_queued_jobs():
-    """ Return the job that has been queued and not starting for long time. """
+    """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")
     if not jobs:
         return
