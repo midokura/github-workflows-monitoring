@@ -4,6 +4,7 @@ from logging.config import dictConfig
 import os
 
 from flask import Flask, abort, request
+from flask_apscheduler import APScheduler
 
 
 from const import GithubHeaders, LOGGING_CONFIG
@@ -12,6 +13,8 @@ from utils import parse_datetime, dict_to_logfmt
 dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
+scheduler = APScheduler()
+scheduler.init_app(app)
 
 # set to WARNING to disable access log
 log = logging.getLogger("werkzeug")
@@ -131,7 +134,31 @@ def process_workflow_job():
     return True
 
 
+@scheduler.task('interval', id='monitor_queued', seconds=30)
+def monitor_queued_jobs():
+    """ Return the job that has been queued and not starting for long time. """
+    app.logger.debug("Starting monitor_queued_jobs")
+    if not jobs:
+        return
+
+    job_id, time_start = min(jobs.items(), key=lambda x: x[1])
+    delay = datetime.now().timestamp() - time_start
+
+    if delay <= int(os.getenv("QUEUED_JOBS_DELAY_THRESHOLD", 150)):
+        return
+
+    context_details = {
+        "action": "monitor_queued",
+        "job_id": job_id,
+        "started_at": time_start,
+        "delay": delay,
+    }
+
+    app.logger.info(dict_to_logfmt(context_details))
+
+
 allowed_events = {"workflow_job": process_workflow_job}
+scheduler.start()
 
 
 @app.route("/github-webhook", methods=["POST"])
