@@ -138,8 +138,7 @@ def monitor_queued_jobs():
         return
 
     jobs_data = query_nodes(list(node_ids))
-    app.logger.info(f"data {jobs_data}")
-    for job in jobs_data["data"]["nodes"]:
+    for job in jobs_data["nodes"]:
         context_details = {
             "action": "monitor_queued",
             "job_id": job["id"],
