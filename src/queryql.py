@@ -1,6 +1,6 @@
 import os
 
-from types import List
+from typing import List
 
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
