@@ -10,6 +10,7 @@ from flask_apscheduler import APScheduler
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
 from utils import dict_to_logfmt
+from queryql import query_node
 
 dictConfig(LOGGING_CONFIG)
 
@@ -61,11 +62,13 @@ def process_workflow_job():
         "job_name": job.name,
         "workflow": job.workflow,
         "requestor": job.requestor,
+        "node_id": job.node_id,
     }
 
     if job.action == "queued":
         # add to memory
         jobs[job.id] = job
+        query_node(job.node_id)
 
     elif job.action == "in_progress":
         job_requested = jobs.get(job.id)
@@ -124,7 +127,7 @@ def process_workflow_job():
     return True
 
 
-@scheduler.task('interval', id='monitor_queued', seconds=30)
+@scheduler.task('interval', id='monitor_queued', seconds=15)
 def monitor_queued_jobs():
     """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")

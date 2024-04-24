@@ -14,6 +14,10 @@ class GithubJob():
         return self.id
 
     @property
+    def node_id(self):
+        return self.data["workflow_job"]["node_id"]
+
+    @property
     def run_id(self):
         return self.data["workflow_job"]["run_id"]
 
