@@ -137,7 +137,7 @@ def monitor_queued_jobs():
     if not node_ids:
         return
 
-    jobs_data = query_nodes(node_ids)
+    jobs_data = query_nodes(list(node_ids))
     for job in jobs_data["data"]["nodes"]:
         context_details = {
             "action": "monitor_queued",
