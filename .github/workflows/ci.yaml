@@ -38,6 +38,7 @@ jobs:
           flavor: |
             latest=true
           tags: |
+            type=sha
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
