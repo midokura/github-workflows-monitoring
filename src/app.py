@@ -10,7 +10,6 @@ from flask_apscheduler import APScheduler
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
 from utils import dict_to_logfmt
-from queryql import query_node
 
 dictConfig(LOGGING_CONFIG)
 
@@ -68,7 +67,7 @@ def process_workflow_job():
     if job.action == "queued":
         # add to memory
         jobs[job.id] = job
-        query_node(job.node_id)
+        # query_node(job.node_id)
 
     elif job.action == "in_progress":
         job_requested = jobs.get(job.id)
