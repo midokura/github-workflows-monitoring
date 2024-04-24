@@ -1,5 +1,7 @@
 import os
 
+from types import List
+
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 
@@ -16,11 +18,11 @@ client = Client(transport=transport, fetch_schema_from_transport=True)
 
 
 # Provide a GraphQL query
-def query_node(node_id):
+def query_nodes(node_id_list: List[str]):
     query = gql(
       """
-      query getCheckRun($node_id: ID!) {
-        node(id: $node_id) {
+        query getCheckRuns($node_id_list: [ID!]!) {
+        nodes(ids: $node_id_list) {
         ... on CheckRun {
                 id
                 name
@@ -29,10 +31,10 @@ def query_node(node_id):
                 completedAt
                 }
             }
-      }
+       }
       """
     )
-    params = {"node_id": node_id}
+    params = {"node_id_list": node_id_list}
 
     result = client.execute(query, variable_values=params)
     app.logger.info(f"Node type {result}")

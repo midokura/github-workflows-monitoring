@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 from logging.config import dictConfig
 import os
@@ -10,7 +9,7 @@ from flask_apscheduler import APScheduler
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
 from utils import dict_to_logfmt
-from queryql import query_node
+from queryql import query_nodes
 
 dictConfig(LOGGING_CONFIG)
 
@@ -27,6 +26,7 @@ if hasattr(logging, loglevel_flask):
 logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 jobs = dict()
+node_ids = set()
 
 
 # check all calls are valid
@@ -68,9 +68,10 @@ def process_workflow_job():
     if job.action == "queued":
         # add to memory
         jobs[job.id] = job
-        query_node(job.node_id)
+        node_ids.add(job.node_id)
 
     elif job.action == "in_progress":
+        node_ids.remove(job.node_id)
         job_requested = jobs.get(job.id)
         time_to_start = None
         if not job_requested:
@@ -98,6 +99,7 @@ def process_workflow_job():
         jobs[job.id] = job
 
     elif job.action == "completed":
+        node_ids.remove(job.node_id)
         job_requested = jobs.get(job.id)
         if not job_requested:
             app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
@@ -132,29 +134,22 @@ def monitor_queued_jobs():
     """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")
 
-    if not jobs:
+    if not node_ids:
         return
 
-    queued_jobs = [job for job in jobs.values() if job.action == "queued"]
-    if not queued_jobs:
-        return
+    jobs_data = query_nodes(node_ids)
+    for job in jobs_data["data"]["nodes"]:
+        context_details = {
+            "action": "monitor_queued",
+            "job_id": job["id"],
+            "job_name": job["name"],
+            "status": job["status"],
+            "started_at": job["startedAt"],
+            "completed_at": job["completedAt"],
+            }
+        app.logger.info(dict_to_logfmt(context_details))
 
-    job = min(queued_jobs, key=lambda x: x.time_start)
-    delay = (datetime.now() - job.time_start).seconds
-
-    if delay <= int(os.getenv("QUEUED_JOBS_DELAY_THRESHOLD", 150)):
-        return
-
-    context_details = {
-        "action": "monitor_queued",
-        "job_id": job.id,
-        "job_name": job.name,
-        "repository": job.repository,
-        "started_at": job.time_start,
-        "delay": delay,
-    }
-
-    app.logger.info(dict_to_logfmt(context_details))
+    # app.logger.info(dict_to_logfmt(context_details))
 
 
 allowed_events = {"workflow_job": process_workflow_job}
