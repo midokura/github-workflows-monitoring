@@ -14,23 +14,21 @@ transport = AIOHTTPTransport(url="https://api.github.com/graphql", headers=heade
 # Create a GraphQL client using the defined transport
 client = Client(transport=transport, fetch_schema_from_transport=True)
 
+
 # Provide a GraphQL query
-
-
-# ... on CheckRun {
-#           name
-#           status
-#           startedAt
-#           completedAt
-#         }
-
 def query_node(node_id):
     query = gql(
       """
       query getCheckRun($node_id: ID!) {
         node(id: $node_id) {
-          __typename
-        }
+        ... on CheckRun {
+                id
+                name
+                status
+                startedAt
+                completedAt
+                }
+            }
       }
       """
     )
