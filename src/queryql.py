@@ -5,8 +5,6 @@ from typing import List
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 
-from flask import current_app as app
-
 # Select your transport with a defined url endpoint
 headers = {
     "Authorization": f"bearer {os.getenv('GH_PAT')}"
@@ -36,5 +34,4 @@ def query_nodes(node_id_list: List[str]):
     )
     params = {"node_id_list": node_id_list}
 
-    result = client.execute(query, variable_values=params)
-    app.logger.info(f"Node type {result}")
+    return client.execute(query, variable_values=params)
