@@ -36,7 +36,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/github-workflows-monitoring
           flavor: |
-            latest=true
+            latest=${{ github.event_name != 'pull_request' }}
           tags: |
             type=sha
             type=ref,event=branch
@@ -46,7 +46,6 @@ jobs:
       - name: Docker build and push
         uses: docker/build-push-action@v4
         with:
-          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: .

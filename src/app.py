@@ -10,6 +10,7 @@ from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
 from utils import dict_to_logfmt
 from queryql import query_nodes
+from job_processor import extract_jobs_metrics_from_data
 
 dictConfig(LOGGING_CONFIG)
 
@@ -138,19 +139,9 @@ def monitor_queued_jobs():
         return
 
     jobs_data = query_nodes(list(node_ids))
-    # TODO remove if not queued
-    for job in jobs_data["nodes"]:
-        context_details = {
-            "action": "monitor_queued",
-            "job_id": job["id"],
-            "job_name": job["name"],
-            "status": job["status"],
-            "started_at": job["startedAt"],
-            "completed_at": job["completedAt"],
-            }
-        app.logger.info(dict_to_logfmt(context_details))
+    details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
-    # app.logger.info(dict_to_logfmt(context_details))
+    app.logger.info(f"Jobs details {details}")
 
 
 allowed_events = {"workflow_job": process_workflow_job}
