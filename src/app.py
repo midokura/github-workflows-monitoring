@@ -12,6 +12,16 @@ from utils import dict_to_logfmt
 from queryql import query_nodes
 from job_processor import extract_jobs_metrics_from_data
 
+from datadog import initialize, statsd
+
+options = {
+    'statsd_host': 'datadog-agent.datadog.svc.cluster.local',
+    'statsd_port': 8125,
+}
+
+initialize(**options)
+
+
 dictConfig(LOGGING_CONFIG)
 
 app = Flask(__name__)
@@ -139,8 +149,12 @@ def monitor_queued_jobs():
         return
 
     jobs_data = query_nodes(list(node_ids))
-    app.logger.info(f"Debug {jobs_data}")
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
+
+    for job in details:
+        statsd.histogram('test.github.runners.job.seconds_in_queue.histogram',
+                         job["seconds_in_queue"],
+                         tags=["environment:dev", f"job:{job['job_name']}"])
 
     app.logger.info(f"Jobs details {details}")
 
