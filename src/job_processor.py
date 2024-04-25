@@ -3,7 +3,7 @@ def extract_jobs_metrics_from_data(jobs_data: dict, queued_node_ids_set: set):
 
     for job in jobs_data["nodes"]:
 
-        if job["status"] != "queued":
+        if job["status"] != "QUEUED":
             queued_node_ids_set.discard(job["id"])
             continue
 
