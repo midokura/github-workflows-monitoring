@@ -138,6 +138,7 @@ def monitor_queued_jobs():
         return
 
     jobs_data = query_nodes(list(node_ids))
+    # TODO remove if not queued
     for job in jobs_data["nodes"]:
         context_details = {
             "action": "monitor_queued",
