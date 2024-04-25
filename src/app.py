@@ -139,6 +139,7 @@ def monitor_queued_jobs():
         return
 
     jobs_data = query_nodes(list(node_ids))
+    app.logger.info(f"Debug {jobs_data}")
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
     app.logger.info(f"Jobs details {details}")
