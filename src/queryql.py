@@ -22,6 +22,7 @@ def query_nodes(node_id_list: List[str]):
         query getCheckRuns($node_id_list: [ID!]!) {
           nodes(ids: $node_id_list) {
             ... on CheckRun {
+                id
                 name
                 status
                 startedAt

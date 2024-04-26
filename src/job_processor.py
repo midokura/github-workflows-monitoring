@@ -15,6 +15,7 @@ def extract_jobs_metrics_from_data(jobs_data: dict, queued_node_ids_set: set):
 
         context_details = {
             "action": "monitor_queued",
+            "job_id": job["id"],
             "job_run": job["checkSuite"]["workflowRun"]["runNumber"],
             "job_name": job["name"],
             "status": job["status"],
