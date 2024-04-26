@@ -37,7 +37,7 @@ if hasattr(logging, loglevel_flask):
 logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 jobs = dict()
-node_ids = set()
+node_ids = dict()
 
 
 # check all calls are valid
@@ -79,10 +79,10 @@ def process_workflow_job():
     if job.action == "queued":
         # add to memory
         jobs[job.id] = job
-        node_ids.add(job.node_id)
+        node_ids[job.node_id] = job
 
     elif job.action == "in_progress":
-        node_ids.discard(job.node_id)
+        node_ids.pop(job.node_id, None)
         job_requested = jobs.get(job.id)
         time_to_start = None
         if not job_requested:
@@ -110,7 +110,7 @@ def process_workflow_job():
         jobs[job.id] = job
 
     elif job.action == "completed":
-        node_ids.discard(job.node_id)
+        node_ids.pop(job.node_id, None)
         job_requested = jobs.get(job.id)
         if not job_requested:
             app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
@@ -151,11 +151,11 @@ def monitor_queued_jobs():
     if not node_ids:
         return
 
-    jobs_data = query_nodes(list(node_ids))
+    jobs_data = query_nodes(node_ids.keys())
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
     for run in details:
-        job = jobs[run["job_id"]]
+        job = node_ids[run["job_id"]]
         app.logger.info(f"Got job {job}")
         statsd.histogram(
             'midokura.github_runners.jobs.seconds_in_queue.histogram',
