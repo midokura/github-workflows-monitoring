@@ -158,7 +158,7 @@ def monitor_queued_jobs():
                 f"job:{run['job_name']}",
                 f"repository:{run['repository']}",
                 f"runner_name:{run['runner_name']}",
-                f"run_id:{run['run_id']}",
+                f"run_id:run{run['run_id']}",
                 f"public:{run['is_public']}"
             ]
         app.logger.info(f"tags {tags}")
