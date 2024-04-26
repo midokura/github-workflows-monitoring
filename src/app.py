@@ -82,7 +82,6 @@ def process_workflow_job():
         node_ids[job.node_id] = job
 
     elif job.action == "in_progress":
-        node_ids.pop(job.node_id, None)
         job_requested = jobs.get(job.id)
         time_to_start = None
         if not job_requested:
@@ -110,7 +109,6 @@ def process_workflow_job():
         jobs[job.id] = job
 
     elif job.action == "completed":
-        node_ids.pop(job.node_id, None)
         job_requested = jobs.get(job.id)
         if not job_requested:
             app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
