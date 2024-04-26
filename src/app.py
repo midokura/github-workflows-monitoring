@@ -151,7 +151,7 @@ def monitor_queued_jobs():
     if not node_ids:
         return
 
-    jobs_data = query_nodes(node_ids.keys())
+    jobs_data = query_nodes(list(node_ids.keys()))
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
     for run in details:
