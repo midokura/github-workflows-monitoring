@@ -152,7 +152,7 @@ def monitor_queued_jobs():
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
     for job in details:
-        statsd.histogram('midokura.github-runners.jobs.seconds_in_queue.histogram',
+        statsd.histogram('midokura.github_runners.jobs.seconds_in_queue.histogram',
                          job["seconds_in_queue"],
                          tags=["environment:dev", f"job:{job['job_name']}"])
 
