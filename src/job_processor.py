@@ -13,6 +13,7 @@ def extract_jobs_metrics_from_data(jobs_data: dict, queued_node_ids: dict):
             "job_id": job["id"],
             "job_name": job["name"],
             "repository": job["repository"],
+            "run_id": queued_node_ids[job["id"]].run_id,
             "is_public": queued_node_ids[job["id"]].runner_public,
             "runner_name": queued_node_ids[job["id"]].runner_name,
             "seconds_in_queue": (now - started_at).total_seconds(),
