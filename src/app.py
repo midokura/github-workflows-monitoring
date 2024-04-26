@@ -140,6 +140,9 @@ def process_workflow_job():
     return True
 
 
+# TODO get repo
+# Add GH_PAT_SECRET
+
 @scheduler.task('interval', id='monitor_queued', seconds=15)
 def monitor_queued_jobs():
     """Return the job that has been queued and not starting for long time."""
@@ -151,10 +154,19 @@ def monitor_queued_jobs():
     jobs_data = query_nodes(list(node_ids))
     details = extract_jobs_metrics_from_data(jobs_data, node_ids)
 
-    for job in details:
-        statsd.histogram('midokura.github_runners.jobs.seconds_in_queue.histogram',
-                         job["seconds_in_queue"],
-                         tags=["environment:dev", f"job:{job['job_name']}"])
+    for run in details:
+        job = jobs[run["job_id"]]
+        app.logger.info(f"Got job {job}")
+        statsd.histogram(
+            'midokura.github_runners.jobs.seconds_in_queue.histogram',
+            run["seconds_in_queue"],
+            tags=[
+                "environment:dev",
+                f"job:{run['job_name']}",
+                f"runner_name:{job.runner_name}",
+                f"public:{job.runner_public}"
+            ]
+        )
 
     app.logger.info(f"Jobs details {details}")
 

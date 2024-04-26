@@ -20,14 +20,25 @@ def query_nodes(node_id_list: List[str]):
     query = gql(
       """
         query getCheckRuns($node_id_list: [ID!]!) {
-        nodes(ids: $node_id_list) {
-        ... on CheckRun {
-                id
+          nodes(ids: $node_id_list) {
+            ... on CheckRun {
                 name
                 status
                 startedAt
                 completedAt
+                repository {
+                  owner {
+                    login
+                  }
+                  name
                 }
+                checkSuite {
+                  workflowRun {
+                    event
+                    runNumber
+                  }
+                }
+              }
             }
        }
       """
