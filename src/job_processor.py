@@ -12,7 +12,7 @@ def extract_jobs_metrics_from_data(jobs_data: dict, queued_node_ids: dict):
             "action": "monitor_queued",
             "job_id": job["id"],
             "job_name": job["name"],
-            "repository": job["repository"],
+            "repository": job["repository"]["name"],
             "run_id": queued_node_ids[job["id"]].run_id,
             "is_public": queued_node_ids[job["id"]].runner_public,
             "runner_name": queued_node_ids[job["id"]].runner_name,
