@@ -159,6 +159,7 @@ def monitor_queued_jobs():
             tags=[
                 "environment:dev",
                 f"job:{run['job_name']}",
+                f"repository:{run['repository']}",
                 f"runner_name:{run['runner_name']}",
                 f"public:{run['is_public']}"
             ]
