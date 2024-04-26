@@ -10,6 +10,7 @@ BODY = {
     "workflow_job": {
         "id": 0,
         "run_id": 10,
+        "node_id": "CR_blah",
         "workflow_name": "CI",
         "head_branch": "new-feature-branch",
         "started_at": "2023-01-27T14:00:00Z",
