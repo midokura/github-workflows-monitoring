@@ -160,7 +160,7 @@ def monitor_queued_jobs():
                 "environment:dev",
                 f"job:{run['job_name']}",
                 f"runner_name:{run['runner_name']}",
-                f"public:{run['runner_public']}"
+                f"public:{run['is_public']}"
             ]
         )
 
