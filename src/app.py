@@ -153,10 +153,7 @@ def monitor_queued_jobs():
 
     for run in details:
         app.logger.info(f"DETAIL {run}")
-        statsd.histogram(
-            'midokura.github_runners.jobs.seconds_in_queue.histogram',
-            run["seconds_in_queue"],
-            tags=[
+        tags = [
                 "environment:dev",
                 f"job:{run['job_name']}",
                 f"repository:{run['repository']}",
@@ -164,6 +161,11 @@ def monitor_queued_jobs():
                 f"run_id:{run['run_id']}",
                 f"public:{run['is_public']}"
             ]
+        app.logger.info(f"tags {tags}")
+        statsd.histogram(
+            'midokura.github_runners.jobs.seconds_in_queue.histogram',
+            run["seconds_in_queue"],
+            tags=tags
         )
 
     app.logger.info(f"Jobs details {details}")
