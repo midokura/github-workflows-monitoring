@@ -1,5 +1,4 @@
-Flask
-Flask-APScheduler==1.13.1
+-e .
 pytest
 pytest-cov
 flake8
