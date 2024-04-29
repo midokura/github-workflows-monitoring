@@ -9,6 +9,7 @@ from flask_apscheduler import APScheduler
 
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
+from jobs import JobEventsHandler
 from utils import dict_to_logfmt
 
 dictConfig(LOGGING_CONFIG)
@@ -26,6 +27,7 @@ if hasattr(logging, loglevel_flask):
 logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 jobs = dict()
+job_handler = JobEventsHandler()
 
 
 # check all calls are valid
@@ -50,7 +52,10 @@ def validate_origin_github():
 
 
 def process_workflow_job():
-    job = GithubJob(request.get_json())
+    event = request.get_json()
+    job_handler.process_event(event)
+
+    job = GithubJob(event)
 
     context_details = {
         "action": job.action,
