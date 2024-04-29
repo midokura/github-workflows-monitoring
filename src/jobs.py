@@ -1,3 +1,5 @@
+import metrics
+
 from datetime import datetime
 from github import GithubJob
 
@@ -14,6 +16,14 @@ class Job:
         self._update_attributes(github_job)
 
         self.node_id = self.github_job.node_id
+
+    @property
+    def seconds_in_queue(self):
+        if self.status == "queued":
+            return (datetime.now() - self.queued_at).total_seconds()
+
+        if self.status == "in_progress" or self.status == "completed":
+            return (self.in_progress_at - self.queued_at).total_seconds()
 
     def _update_attributes(self, github_job: GithubJob):
         self.github_job: GithubJob = github_job
@@ -71,10 +81,16 @@ class JobEventsHandler:
             job = self._create_job(GithubJob(event))
         else:
             job.update(GithubJob(event))
+            metrics.send_queued_job(
+                seconds_in_queue=job.seconds_in_queue,
+                job_name=job.github_job.job_name,
+                repository=job.github_job.repository,
+                runner=job.github_job.runner_name,
+                run_id=job.github_job.run_id,
+                public=job.github_job.runner_public,
+            )
 
         self.in_progress[job_id] = job
-
-        # TODO send final time in queue
 
     def _process_completed_event(self, event: dict):
         job_id = self._get_event_job_id(event)
