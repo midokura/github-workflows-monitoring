@@ -128,21 +128,20 @@ def process_workflow_job():
 
 @scheduler.task("interval", id="monitor_jobs", seconds=15)
 def monitor_jobs():
-    queued_nodes = [
-        job.node_id for job in job_handler.values() if job.status == "queued"
-    ]
+    queued_nodes = [job.node_id for job in job_handler.queued.values()]
     jobs_data = query_jobs(queued_nodes)
 
     for job_data in jobs_data["nodes"]:
-        job = job_handler.queued[job_data["id"]]
+        job = job_handler.queued.get(job_data["id"])
         if job_data["status"] != "QUEUED":
-            job = job_handler.queued.pop(job["id"], None)
-            job.status = job_data["status"].lower()
-            job.in_progress_at = parse_datetime(job_data["startedAt"])
-            job.completed_at = parse_datetime(job_data["completedAt"])
-            job.final_queued_time_updated = True
+            job = job_handler.queued.pop(job_data["id"], None)
+            if job:
+                job.status = job_data["status"].lower()
+                job.in_progress_at = parse_datetime(job_data["startedAt"])
+                job.completed_at = parse_datetime(job_data["completedAt"])
+                job.final_queued_time_updated = True
 
-        job.send_queued_metrics()
+        job.send_queued_metric()
 
 
 @scheduler.task("interval", id="monitor_queued", seconds=30)
