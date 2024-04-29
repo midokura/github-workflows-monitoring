@@ -12,12 +12,12 @@ def new_job_event():
 
 @pytest.fixture
 def in_progress_job_event():
-    return {"workflow_job": {"id": "workflow_id"},  "action": "in_progress"}
+    return {"workflow_job": {"id": "workflow_id"}, "action": "in_progress"}
 
 
 @pytest.fixture
 def completed_job_event():
-    return {"workflow_job": {"id": "workflow_id"},  "action": "completed"}
+    return {"workflow_job": {"id": "workflow_id"}, "action": "completed"}
 
 
 def test_new_job(new_job_event):
