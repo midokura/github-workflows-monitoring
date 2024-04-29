@@ -140,8 +140,8 @@ def monitor_jobs():
                 job.in_progress_at = parse_datetime(job_data["startedAt"])
                 job.completed_at = parse_datetime(job_data["completedAt"])
                 job.final_queued_time_updated = True
-
-        job.send_queued_metric()
+        if job:
+            job.send_queued_metric()
 
 
 @scheduler.task("interval", id="monitor_queued", seconds=30)
