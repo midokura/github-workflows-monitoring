@@ -10,7 +10,8 @@ from flask_apscheduler import APScheduler
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
 from jobs import JobEventsHandler
-from utils import dict_to_logfmt
+from utils import dict_to_logfmt, parse_datetime
+from query_graphql import query_jobs
 
 dictConfig(LOGGING_CONFIG)
 
@@ -123,6 +124,25 @@ def process_workflow_job():
     if context_details:
         app.logger.info(dict_to_logfmt(context_details))
     return True
+
+
+@scheduler.task("interval", id="monitor_jobs", seconds=15)
+def monitor_jobs():
+    queued_nodes = [
+        job.node_id for job in job_handler.values() if job.status == "queued"
+    ]
+    jobs_data = query_jobs(queued_nodes)
+
+    for job_data in jobs_data["nodes"]:
+        job = job_handler.queued[job_data["id"]]
+        if job_data["status"] != "QUEUED":
+            job = job_handler.queued.pop(job["id"], None)
+            job.status = job_data["status"].lower()
+            job.in_progress_at = parse_datetime(job_data["startedAt"])
+            job.completed_at = parse_datetime(job_data["completedAt"])
+            job.final_queued_time_updated = True
+
+        job.send_queued_metrics()
 
 
 @scheduler.task("interval", id="monitor_queued", seconds=30)
