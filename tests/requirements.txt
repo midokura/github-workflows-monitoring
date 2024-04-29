@@ -1,5 +1,5 @@
-Flask
-Flask-APScheduler==1.13.1
-pytest
-pytest-cov
-flake8
+-e .
+pytest==8.2.0
+pytest-cov==5.0.0
+flake8==7.0.0
+black==24.4.2

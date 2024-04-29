@@ -9,6 +9,7 @@ from flask_apscheduler import APScheduler
 
 from const import GithubHeaders, LOGGING_CONFIG
 from github import GithubJob
+from jobs import JobEventsHandler
 from utils import dict_to_logfmt
 
 dictConfig(LOGGING_CONFIG)
@@ -23,9 +24,10 @@ loglevel_flask = os.getenv("LOGLEVEL", "INFO")
 if hasattr(logging, loglevel_flask):
     loglevel_flask = getattr(logging, loglevel_flask)
     log.setLevel(loglevel_flask)
-logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 
 jobs = dict()
+job_handler = JobEventsHandler()
 
 
 # check all calls are valid
@@ -50,7 +52,10 @@ def validate_origin_github():
 
 
 def process_workflow_job():
-    job = GithubJob(request.get_json())
+    event = request.get_json()
+    job_handler.process_event(event)
+
+    job = GithubJob(event)
 
     context_details = {
         "action": job.action,
@@ -77,9 +82,7 @@ def process_workflow_job():
                 app.logger.error(f"Job {job.id} was in progress before being queued")
                 del jobs[job.id]
             else:
-                time_to_start = (
-                    job.time_start - job_requested.time_start
-                ).seconds
+                time_to_start = (job.time_start - job_requested.time_start).seconds
 
         context_details = {
             **context_details,
@@ -100,9 +103,7 @@ def process_workflow_job():
             app.logger.warning(f"Job {job.id} is {job.action} but not stored!")
             time_to_finish = 0
         else:
-            time_to_finish = (
-                job.time_completed - job.time_start
-            ).seconds
+            time_to_finish = (job.time_completed - job.time_start).seconds
             # delete from memory
             del jobs[job.id]
 
@@ -124,7 +125,7 @@ def process_workflow_job():
     return True
 
 
-@scheduler.task('interval', id='monitor_queued', seconds=30)
+@scheduler.task("interval", id="monitor_queued", seconds=30)
 def monitor_queued_jobs():
     """Return the job that has been queued and not starting for long time."""
     app.logger.debug("Starting monitor_queued_jobs")

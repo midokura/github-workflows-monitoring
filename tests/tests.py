@@ -41,7 +41,7 @@ def test_method_not_allowed(client):
 
 
 def test_headers_not_correct(client, caplog):
-    response = client.post(HOOK_ENDPOINT, headers={'User-Agent': 'foo'})
+    response = client.post(HOOK_ENDPOINT, headers={"User-Agent": "foo"})
     assert response.status_code == 401
     assert caplog.messages == [
         "User-Agent is foo",
@@ -197,5 +197,5 @@ def test_line_break_in_job_name(client, caplog):
     assert caplog.messages == [
         'action=queued repository=foo/foo branch=new-feature-branch job_id=6 run_id=10 job_name="Build and push '
         'images (actions-runner-dind, NPROC=2 , runner-images/devops/actions-runner-dind, l..."'
-        ' workflow=CI requestor=testerbot'
+        " workflow=CI requestor=testerbot"
     ]
