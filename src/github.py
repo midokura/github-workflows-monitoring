@@ -18,6 +18,10 @@ class GithubJob:
         return self.data["workflow_job"]["run_id"]
 
     @property
+    def node_id(self):
+        return self.data["workflow_job"]["node_id"]
+
+    @property
     def name(self):
         return self.data["workflow_job"]["name"].replace("\n", " ")
 
