@@ -145,6 +145,7 @@ def monitor_jobs():
                 job.completed_at = parse_datetime(job_data["completedAt"])
                 job.final_queued_time_updated = True
         if job:
+            app.logger.info(f"Sending metric for {job_data['id']}")
             job.send_queued_metric()
 
 

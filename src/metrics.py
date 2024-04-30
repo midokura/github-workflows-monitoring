@@ -1,8 +1,5 @@
 import logging
-from logging.config import dictConfig
 from datadog import initialize, statsd
-
-from const import LOGGING_CONFIG
 
 options = {
     "statsd_host": "datadog-agent.datadog.svc.cluster.local",
@@ -11,8 +8,7 @@ options = {
 
 initialize(**options)
 
-dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("werkzeug")
+logger = logging.getLogger(__name__)
 
 
 def send_queued_job(
