@@ -77,7 +77,7 @@ class JobEventsHandler:
             pass
 
     def _get_event_job_id(self, event: dict):
-        return event["workflow_job"]["id"]
+        return event["workflow_job"]["node_id"]
 
     def _create_job(self, githubJob: GithubJob) -> Job:
         return Job(github_job=githubJob)
