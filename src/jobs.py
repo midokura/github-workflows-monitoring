@@ -47,6 +47,7 @@ class Job:
         metrics.send_queued_job(
             seconds_in_queue=self.seconds_in_queue,
             job_name=self.github_job.job_name,
+            job_id=self.github_job.job_id,
             repository=self.github_job.repository,
             runner=self.github_job.runner_name,
             run_id=self.github_job.run_id,
