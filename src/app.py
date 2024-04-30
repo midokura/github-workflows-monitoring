@@ -132,6 +132,9 @@ def monitor_jobs():
     jobs_data = query_jobs(queued_nodes)
 
     for job_data in jobs_data["nodes"]:
+        app.logger.info(
+            f"Checking if job {job_data['id']} in dict keys {job_handler.queued.keys()}"
+        )
         job = job_handler.queued.get(job_data["id"])
         app.logger.info(f"Fetched job status {job_data['status']}")
         if job_data["status"] != "QUEUED":
