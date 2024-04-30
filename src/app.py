@@ -132,11 +132,7 @@ def monitor_jobs():
     jobs_data = query_jobs(queued_nodes)
 
     for job_data in jobs_data["nodes"]:
-        app.logger.info(
-            f"Checking if job {job_data['id']} in dict keys {job_handler.queued.keys()}"
-        )
         job = job_handler.queued.get(job_data["id"])
-        app.logger.info(f"Fetched job status {job_data['status']}")
         if job_data["status"] != "QUEUED":
             job = job_handler.queued.pop(job_data["id"], None)
             if job:
@@ -145,7 +141,6 @@ def monitor_jobs():
                 job.completed_at = parse_datetime(job_data["completedAt"])
                 job.final_queued_time_updated = True
         if job:
-            app.logger.info(f"Sending metric for {job_data['id']}")
             job.send_queued_metric()
 
 

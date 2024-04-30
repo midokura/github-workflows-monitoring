@@ -28,7 +28,7 @@ def send_queued_job(
         f"public:{public}",
         f"runner_group_name:{runner_group_name}",
     ]
-    logger.info(f"Submitting queue metric time: {seconds_in_queue}, tags: {tags}")
+    logger.debug(f"Submitting queue metric time: {seconds_in_queue}, tags: {tags}")
     statsd.histogram(
         "midokura.github_runners.jobs.seconds_in_queue.histogram",
         seconds_in_queue,
