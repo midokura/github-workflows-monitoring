@@ -17,6 +17,7 @@ def send_queued_job(
     job_labels: str,
     repository: str,
     public: bool,
+    runner_group_name: str,
 ):
     tags = [
         f"job:{job_name}",
@@ -24,6 +25,7 @@ def send_queued_job(
         f"status:{status}",
         f"labels:{job_labels}",
         f"public:{public}",
+        f"runner_group_name:{runner_group_name}",
     ]
     current_app.logger.info(
         f"Submitting queue metric time: {seconds_in_queue}, tags: {tags}"
