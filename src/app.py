@@ -133,6 +133,7 @@ def monitor_jobs():
 
     for job_data in jobs_data["nodes"]:
         job = job_handler.queued.get(job_data["id"])
+        app.logger.info(f"Fetched job status {job_data['status']}")
         if job_data["status"] != "QUEUED":
             job = job_handler.queued.pop(job_data["id"], None)
             if job:
