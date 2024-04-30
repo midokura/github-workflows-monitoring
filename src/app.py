@@ -131,10 +131,13 @@ def monitor_jobs():
     queued_nodes = [job.node_id for job in job_handler.queued.values()]
     jobs_data = query_jobs(queued_nodes)
 
+    app.logger.info(f"Processing data for jobs {job_handler.queued.keys()}")
+
     for job_data in jobs_data["nodes"]:
         job = job_handler.queued.get(job_data["id"])
         if job_data["status"] != "QUEUED":
             job = job_handler.queued.pop(job_data["id"], None)
+            app.logger.info(f"Job {job_data['id']} is no longer queued")
             if job:
                 job.status = job_data["status"].lower()
                 job.in_progress_at = parse_datetime(job_data["startedAt"])
