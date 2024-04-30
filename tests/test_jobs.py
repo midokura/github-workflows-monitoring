@@ -86,6 +86,7 @@ def test_in_progress_job_event(
     send_queued_job_mock.assert_called_with(
         seconds_in_queue=16.0,
         job_name="workflow name",
+        job_id="workflow_id",
         repository="test/repo",
         runner="test runner",
         run_id=1234567890,
