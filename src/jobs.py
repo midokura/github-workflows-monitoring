@@ -88,16 +88,16 @@ class JobEventsHandler:
 
     def _process_in_progress_event(self, event: dict):
         job_id = self._get_event_job_id(event)
-        job = self.queued.pop(job_id, None)
+        job = self.queued.get(job_id, None)
 
         if not job:
             job = self._create_job(GithubJob(event))
         else:
             job.update(GithubJob(event))
             # This is a fallover in case the job was not processed during the tracking time.
-            if not job.final_queued_time_updated:
-                job.final_queued_time_updated = True
-                job.send_queued_metric()
+            # if not job.final_queued_time_updated:
+            #     job.final_queued_time_updated = True
+            #     job.send_queued_metric()
 
         self.in_progress[job_id] = job
 
