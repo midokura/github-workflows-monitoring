@@ -16,6 +16,7 @@ class Job:
         self._update_attributes(github_job)
 
         self.node_id = self.github_job.node_id
+        self.labels = "-".join(sorted(self.github_job.labels))
         self.final_queued_time_updated = False
 
     @property
@@ -47,10 +48,9 @@ class Job:
         metrics.send_queued_job(
             seconds_in_queue=self.seconds_in_queue,
             job_name=self.github_job.job_name,
-            job_id=self.github_job.job_id,
+            status=self.status,
+            job_labels=self.labels,
             repository=self.github_job.repository,
-            runner=self.github_job.runner_name,
-            run_id=self.github_job.run_id,
             public=self.github_job.runner_public,
         )
 

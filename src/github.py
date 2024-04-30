@@ -77,5 +77,9 @@ class GithubJob:
     def runner_public(self):
         return self.runner_group_name == "GitHub Actions"
 
+    @property
+    def labels(self):
+        return self.data["workflow_job"]["labels"]
+
     def __str__(self):
         return f"<{self.id}@{self.name}>"

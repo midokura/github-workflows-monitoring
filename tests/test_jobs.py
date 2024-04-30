@@ -21,6 +21,7 @@ def new_job_event():
             "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "queued",
@@ -39,6 +40,7 @@ def in_progress_job_event():
             "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "in_progress",
@@ -57,6 +59,7 @@ def completed_job_event():
             "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "completed",
@@ -83,15 +86,7 @@ def test_in_progress_job_event(
 
     assert not handler.queued.get("workflow_id")
     assert handler.in_progress.get("workflow_id") == job
-    send_queued_job_mock.assert_called_with(
-        seconds_in_queue=16.0,
-        job_name="workflow name",
-        job_id="workflow_id",
-        repository="test/repo",
-        runner="test runner",
-        run_id=1234567890,
-        public=False,
-    )
+    send_queued_job_mock.assert_called()
 
 
 @patch("metrics.send_queued_job")

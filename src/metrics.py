@@ -13,16 +13,16 @@ initialize(**options)
 def send_queued_job(
     seconds_in_queue: int,
     job_name: str,
-    job_id,
+    status: str,
+    job_labels: str,
     repository: str,
-    runner: str,
-    run_id: str,
     public: bool,
 ):
     tags = [
         f"job:{job_name}",
         f"repository:{repository}",
-        f"runner_name:{runner}",
+        f"status:{status}",
+        f"labels:{job_labels}",
         f"public:{public}",
     ]
     current_app.logger.info(
