@@ -147,7 +147,7 @@ def monitor_jobs():
                 job.final_queued_time_updated = True
         if job:
             app.logger.info(
-                f"Sending metric for {job_data['id']} with status {job_data['status']}"
+                f"Sending metric for {job_data['id']} with status {job_data['status']}, duration {job.seconds_in_queue}"
             )
             job.send_queued_metric()
 
