@@ -95,9 +95,9 @@ class JobEventsHandler:
         else:
             job.update(GithubJob(event))
             # This is a fallover in case the job was not processed during the tracking time.
-            # if not job.final_queued_time_updated:
-            #     job.final_queued_time_updated = True
-            #     job.send_queued_metric()
+            if not job.final_queued_time_updated:
+                job.final_queued_time_updated = True
+                job.send_queued_metric()
 
         self.in_progress[job_id] = job
 

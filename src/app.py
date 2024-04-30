@@ -137,7 +137,9 @@ def monitor_jobs():
         job = job_handler.queued.get(job_data["id"])
         if job_data["status"] != "QUEUED":
             job = job_handler.queued.pop(job_data["id"], None)
-            app.logger.info(f"Job {job_data['id']} is no longer queued")
+            app.logger.info(
+                f"Job {job_data['id']} is no longer queued {job_data['status']}"
+            )
             if job:
                 job.status = job_data["status"].lower()
                 job.in_progress_at = parse_datetime(job_data["startedAt"])
