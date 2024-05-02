@@ -26,7 +26,6 @@ if hasattr(logging, loglevel_flask):
     loglevel_flask = getattr(logging, loglevel_flask)
     log.setLevel(loglevel_flask)
 logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
-logging.getLogger("datadog.dogstatsd").setLevel(logging.DEBUG)
 
 jobs = dict()
 job_handler = JobEventsHandler()
