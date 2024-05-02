@@ -26,7 +26,6 @@ def send_queued_job(
     seconds_in_queue: int,
     job_name: str,
     status: str,
-    job_labels: str,
     repository: str,
     public: bool,
     runner_group_name: str,
@@ -35,9 +34,8 @@ def send_queued_job(
         f"repository:{repository}",
         f"job_name:{job_name}",
         f"status:{status}",
-        # f"labels:{job_labels}",
         f"public:{public}",
-        # f"runner_group_name:{runner_group_name}",
+        f"runner_group_name:{runner_group_name}",
     ]
 
     tags = normalize_tags(tags)
@@ -49,4 +47,3 @@ def send_queued_job(
         seconds_in_queue,
         tags=tags,
     )
-    # statsd.flush()

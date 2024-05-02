@@ -1,4 +1,4 @@
-from flask import current_app
+from typing import Dict
 import metrics
 
 from datetime import datetime
@@ -46,12 +46,10 @@ class Job:
         self._update_attributes(github_job)
 
     def send_queued_metric(self):
-        current_app.logger.info("Sending queued metric")
         metrics.send_queued_job(
             seconds_in_queue=self.seconds_in_queue,
             job_name=self.github_job.job_name,
             status=self.status,
-            job_labels=self.labels,
             repository=self.github_job.repository,
             runner_group_name=self.github_job.runner_group_name,
             public=self.github_job.runner_public,
@@ -60,8 +58,8 @@ class Job:
 
 class JobEventsHandler:
     def __init__(self) -> None:
-        self.queued = dict()
-        self.in_progress = dict()
+        self.queued: Dict[str, Job] = dict()
+        self.in_progress: Dict[str, Job] = dict()
 
     def process_event(self, event: dict):
         status = event["action"]
@@ -90,18 +88,18 @@ class JobEventsHandler:
 
     def _process_in_progress_event(self, event: dict):
         job_id = self._get_event_job_id(event)
-        job = self.queued.get(job_id, None)
+        job = self.queued.pop(job_id, None)
 
         if not job:
             job = self._create_job(GithubJob(event))
         else:
             job.update(GithubJob(event))
             # This is a fallover in case the job was not processed during the tracking time.
-            # if not job.final_queued_time_updated:
-            # job.final_queued_time_updated = True
-            # job.send_queued_metric()
+            if not job.final_queued_time_updated:
+                job.final_queued_time_updated = True
+                job.send_queued_metric()
 
-        # self.in_progress[job_id] = job
+        self.in_progress[job_id] = job
 
     def _process_completed_event(self, event: dict):
         job_id = self._get_event_job_id(event)

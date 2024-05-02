@@ -84,9 +84,9 @@ def test_in_progress_job_event(
 
     handler.process_event(in_progress_job_event)
 
-    # assert not handler.queued.get("CR_node_id")
+    assert not handler.queued.get("CR_node_id")
     assert handler.in_progress.get("CR_node_id") == job
-    # send_queued_job_mock.assert_called()
+    send_queued_job_mock.assert_called()
 
 
 @patch("metrics.send_queued_job")
