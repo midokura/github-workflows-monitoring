@@ -49,3 +49,4 @@ def send_queued_job(
         seconds_in_queue,
         tags=tags,
     )
+    statsd.flush()
