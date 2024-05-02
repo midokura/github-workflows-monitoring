@@ -44,9 +44,9 @@ def send_queued_job(
 
     current_app.logger.info(f"Sending {seconds_in_queue} tags {tags}")
 
-    statsd.histogram(
+    statsd.distribution(
         "midokura.github_runners.jobs.seconds_in_queue.histogram",
         seconds_in_queue,
         tags=tags,
     )
-    statsd.flush()
+    # statsd.flush()
