@@ -45,6 +45,7 @@ class Job:
         self._update_attributes(github_job)
 
     def send_queued_metric(self):
+        print("Sending queued metric")
         metrics.send_queued_job(
             seconds_in_queue=self.seconds_in_queue,
             job_name=self.github_job.job_name,
