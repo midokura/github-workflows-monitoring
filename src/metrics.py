@@ -1,4 +1,6 @@
 import logging
+import re
+
 from datadog import initialize, statsd
 from flask import current_app
 
@@ -21,7 +23,7 @@ def send_queued_job(
     public: bool,
     runner_group_name: str,
 ):
-    tags = [
+    unprocessed_tags = [
         f"repository:{repository}",
         f"job:{job_name}",
         f"status:{status}",
@@ -29,6 +31,10 @@ def send_queued_job(
         # f"public:{public}",
         # f"runner_group_name:{runner_group_name}",
     ]
+    tags = []
+
+    for tag in unprocessed_tags:
+        tags.append(re.sub(r"\W+", "_", tag))
 
     current_app.logger.info(f"Sending {seconds_in_queue} tags {tags}")
 
