@@ -33,7 +33,7 @@ def send_queued_job(
 ):
     tags = [
         f"repository:{repository}",
-        f"job:{job_name}",
+        f"job_name:{job_name}",
         f"status:{status}",
         # f"labels:{job_labels}",
         # f"public:{public}",
