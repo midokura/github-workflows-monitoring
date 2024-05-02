@@ -36,7 +36,7 @@ def send_queued_job(
         f"job_name:{job_name}",
         f"status:{status}",
         # f"labels:{job_labels}",
-        # f"public:{public}",
+        f"public:{public}",
         # f"runner_group_name:{runner_group_name}",
     ]
 
