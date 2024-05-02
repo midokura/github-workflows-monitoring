@@ -23,8 +23,8 @@ def send_queued_job(
 ):
     tags = [
         f"repository:{repository}",
-        # f"job:{job_name}",
-        # f"status:{status}",
+        f"job:{job_name}",
+        f"status:{status}",
         # f"labels:{job_labels}",
         # f"public:{public}",
         # f"runner_group_name:{runner_group_name}",
