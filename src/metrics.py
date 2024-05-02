@@ -22,12 +22,12 @@ def send_queued_job(
     runner_group_name: str,
 ):
     tags = [
-        f"job:{job_name}",
         f"repository:{repository}",
-        f"status:{status}",
-        f"labels:{job_labels}",
-        f"public:{public}",
-        f"runner_group_name:{runner_group_name}",
+        # f"job:{job_name}",
+        # f"status:{status}",
+        # f"labels:{job_labels}",
+        # f"public:{public}",
+        # f"runner_group_name:{runner_group_name}",
     ]
 
     current_app.logger.info(f"Sending {seconds_in_queue} tags {tags}")
