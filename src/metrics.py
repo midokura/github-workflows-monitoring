@@ -1,5 +1,6 @@
 import logging
 from datadog import initialize, statsd
+from flask import current_app
 
 options = {
     "statsd_host": "datadog-agent.datadog.svc.cluster.local",
@@ -28,8 +29,11 @@ def send_queued_job(
         f"public:{public}",
         f"runner_group_name:{runner_group_name}",
     ]
-    statsd.timing(
-        "midokura.github_runners.jobs.seconds_in_queue.time",
+
+    current_app.logger.info(f"Sending {seconds_in_queue} tags {tags}")
+
+    statsd.histogram(
+        "midokura.github_runners.jobs.seconds_in_queue.histogram",
         seconds_in_queue,
         tags=tags,
     )

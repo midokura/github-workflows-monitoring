@@ -150,6 +150,8 @@ def monitor_jobs():
                 f"Sending metric for {job_data['id']} with status {job_data['status']}, duration {job.seconds_in_queue}"
             )
             job.send_queued_metric()
+        else:
+            app.logger.info(f"No job for {job_data['id']}")
 
 
 @scheduler.task("interval", id="monitor_queued", seconds=30)
