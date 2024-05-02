@@ -19,7 +19,7 @@ TAG_INVALID_CHARS_SUBS = "_"
 
 
 def normalize_tags(tag_list):
-    [TAG_INVALID_CHARS_RE.sub(TAG_INVALID_CHARS_SUBS, tag) for tag in tag_list]
+    return [TAG_INVALID_CHARS_RE.sub(TAG_INVALID_CHARS_SUBS, tag) for tag in tag_list]
 
 
 def send_queued_job(
