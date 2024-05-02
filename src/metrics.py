@@ -34,7 +34,10 @@ def send_queued_job(
     tags = []
 
     for tag in unprocessed_tags:
-        tags.append(re.sub(r"\W+", "_", tag))
+        splitted = tag.split(":")
+        subst = re.sub(r"\W+", "_", splitted[1])
+        tag = f"{splitted[0]}:{subst}"
+        tags.append(tag)
 
     current_app.logger.info(f"Sending {seconds_in_queue} tags {tags}")
 
