@@ -53,6 +53,7 @@ class Job:
             repository=self.github_job.repository,
             runner_group_name=self.github_job.runner_group_name,
             public=self.github_job.runner_public,
+            buildjet=self.github_job.runner_buildjet,
         )
 
 

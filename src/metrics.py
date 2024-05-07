@@ -28,6 +28,7 @@ def send_queued_job(
     status: str,
     repository: str,
     public: bool,
+    buildjet: bool,
     runner_group_name: str,
 ):
     tags = [
@@ -35,6 +36,7 @@ def send_queued_job(
         f"job_name:{job_name}",
         f"status:{status}",
         f"public:{public}",
+        f"buildjet:{buildjet}",
         f"runner_group_name:{runner_group_name}",
     ]
 
