@@ -78,6 +78,10 @@ class GithubJob:
         return self.runner_group_name == "GitHub Actions"
 
     @property
+    def runner_buildjet(self):
+        return any(item.startswith("buildjet") for item in self.labels)
+
+    @property
     def labels(self):
         return self.data["workflow_job"]["labels"]
 
