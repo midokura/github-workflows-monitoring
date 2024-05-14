@@ -1,3 +1,4 @@
+from typing import Dict
 import metrics
 
 from datetime import datetime
@@ -16,6 +17,8 @@ class Job:
         self._update_attributes(github_job)
 
         self.node_id = self.github_job.node_id
+        self.labels = "-".join(sorted(self.github_job.labels))
+        self.final_queued_time_updated = False
 
     @property
     def seconds_in_queue(self):
@@ -27,7 +30,7 @@ class Job:
 
     def _update_attributes(self, github_job: GithubJob):
         self.github_job: GithubJob = github_job
-        self.status = github_job.action
+        self.status = self.github_job.action
 
         if self.github_job.action == "queued":
             self.queued_at = self.github_job.time_start
@@ -42,11 +45,22 @@ class Job:
     def update(self, github_job: GithubJob):
         self._update_attributes(github_job)
 
+    def send_queued_metric(self):
+        metrics.send_queued_job(
+            seconds_in_queue=self.seconds_in_queue,
+            job_name=self.github_job.job_name,
+            status=self.status,
+            repository=self.github_job.repository,
+            runner_group_name=self.github_job.runner_group_name,
+            public=self.github_job.runner_public,
+            buildjet=self.github_job.runner_buildjet,
+        )
+
 
 class JobEventsHandler:
     def __init__(self) -> None:
-        self.queued = dict()
-        self.in_progress = dict()
+        self.queued: Dict[str, Job] = dict()
+        self.in_progress: Dict[str, Job] = dict()
 
     def process_event(self, event: dict):
         status = event["action"]
@@ -64,7 +78,7 @@ class JobEventsHandler:
             pass
 
     def _get_event_job_id(self, event: dict):
-        return event["workflow_job"]["id"]
+        return event["workflow_job"]["node_id"]
 
     def _create_job(self, githubJob: GithubJob) -> Job:
         return Job(github_job=githubJob)
@@ -81,14 +95,10 @@ class JobEventsHandler:
             job = self._create_job(GithubJob(event))
         else:
             job.update(GithubJob(event))
-            metrics.send_queued_job(
-                seconds_in_queue=job.seconds_in_queue,
-                job_name=job.github_job.job_name,
-                repository=job.github_job.repository,
-                runner=job.github_job.runner_name,
-                run_id=job.github_job.run_id,
-                public=job.github_job.runner_public,
-            )
+            # This is a fallover in case the job was not processed during the tracking time.
+            if not job.final_queued_time_updated:
+                job.final_queued_time_updated = True
+                job.send_queued_metric()
 
         self.in_progress[job_id] = job
 

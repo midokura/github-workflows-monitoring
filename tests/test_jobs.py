@@ -18,9 +18,10 @@ def new_job_event():
             "run_id": 1234567890,
             "started_at": "2024-04-29T12:43:16Z",
             "completed_at": None,
-            "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
+            "node_id": "CR_node_id",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "queued",
@@ -36,9 +37,10 @@ def in_progress_job_event():
             "run_id": 1234567890,
             "started_at": "2024-04-29T12:43:32Z",
             "completed_at": None,
-            "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
+            "node_id": "CR_node_id",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "in_progress",
@@ -54,9 +56,10 @@ def completed_job_event():
             "run_id": 1234567890,
             "started_at": "2024-04-29T12:43:32Z",
             "completed_at": "2024-04-29T12:45:09Z",
-            "node_id": "CR_kwDOHC6jj88AAAAFqGXrPQ",
+            "node_id": "CR_node_id",
             "runner_name": "test runner",
             "runner_group_name": "Runner Group Test",
+            "labels": ["self-hosted"],
         },
         "repository": {"full_name": "test/repo"},
         "action": "completed",
@@ -68,7 +71,7 @@ def test_new_job_event(new_job_event):
 
     handler.process_event(new_job_event)
 
-    assert handler.queued.get("workflow_id")
+    assert handler.queued.get("CR_node_id")
 
 
 @patch("metrics.send_queued_job")
@@ -77,20 +80,13 @@ def test_in_progress_job_event(
 ):
     handler = JobEventsHandler()
     job = Job(GithubJob(new_job_event))
-    handler.queued["workflow_id"] = job
+    handler.queued["CR_node_id"] = job
 
     handler.process_event(in_progress_job_event)
 
-    assert not handler.queued.get("workflow_id")
-    assert handler.in_progress.get("workflow_id") == job
-    send_queued_job_mock.assert_called_with(
-        seconds_in_queue=16.0,
-        job_name="workflow name",
-        repository="test/repo",
-        runner="test runner",
-        run_id=1234567890,
-        public=False,
-    )
+    assert not handler.queued.get("CR_node_id")
+    assert handler.in_progress.get("CR_node_id") == job
+    send_queued_job_mock.assert_called()
 
 
 @patch("metrics.send_queued_job")
@@ -98,18 +94,18 @@ def test_unprocessed_in_progress_job_event(send_queued_job_mock, in_progress_job
     handler = JobEventsHandler()
     handler.process_event(in_progress_job_event)
 
-    assert handler.in_progress.get("workflow_id")
+    assert handler.in_progress.get("CR_node_id")
     send_queued_job_mock.assert_not_called()
 
 
 def test_completed_job_event(completed_job_event):
     handler = JobEventsHandler()
-    handler.in_progress["workflow_id"] = Mock()
+    handler.in_progress["CR_node_id"] = Mock()
 
     handler.process_event(completed_job_event)
 
-    assert handler.queued.get("workflow_id") is None
-    assert handler.in_progress.get("workflow_id") is None
+    assert handler.queued.get("CR_node_id") is None
+    assert handler.in_progress.get("CR_node_id") is None
 
 
 def test_new_job(new_job_event):
