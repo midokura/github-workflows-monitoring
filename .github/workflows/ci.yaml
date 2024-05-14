@@ -56,7 +56,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
       - name: Set metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/github-workflows-monitoring
           flavor: |
