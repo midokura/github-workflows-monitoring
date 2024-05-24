@@ -42,6 +42,8 @@ def query_jobs(node_id_list: List[str]):
        }
       """
     )
-    params = {"node_id_list": node_id_list}
+    params = {
+        "node_id_list": node_id_list[:100]
+    }  # Get only the 100 first, the others will be processed on next iterations
 
     return client.execute(query, variable_values=params)
