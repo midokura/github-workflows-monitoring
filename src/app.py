@@ -137,7 +137,7 @@ def monitor_jobs():
         for job_data in jobs_data["nodes"]:
             job = job_handler.queued.get(job_data["id"])
             if (
-                job.get("checkSuite", {}).get("status") == "COMPLETED"
+                job_data.get("checkSuite", {}).get("status") == "COMPLETED"
                 or job_data["status"] != "QUEUED"
             ):
                 job = job_handler.queued.pop(job_data["id"], None)
