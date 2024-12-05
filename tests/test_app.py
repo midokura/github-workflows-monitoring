@@ -68,14 +68,14 @@ def test_monitor_jobs(
             {
                 "id": "workflow_id_queued",
                 "status": "QUEUED",
-                "checkSuit": {"status": "IN_PROGRESS"},
+                "checkSuite": {"status": "IN_PROGRESS"},
                 "startedAt": "2024-04-29T12:43:16Z",
                 "completedAt": None,
             },
             {
                 "id": "workflow_id_in_progress",
                 "status": "IN_PROGRESS",
-                "checkSuit": {"status": "IN_PROGRESS"},
+                "checkSuite": {"status": "IN_PROGRESS"},
                 "startedAt": "2024-04-29T12:43:32Z",
                 "completedAt": None,
             },
@@ -105,7 +105,7 @@ def test_monitor_jobs_completed_suit(
             {
                 "id": "workflow_id_queued",
                 "status": "QUEUED",
-                "checkSuit": {"status": "COMPLETED"},
+                "checkSuite": {"status": "COMPLETED"},
                 "startedAt": "2024-04-29T12:43:16Z",
                 "completedAt": None,
             }
