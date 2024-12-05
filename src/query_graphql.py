@@ -32,6 +32,7 @@ def query_jobs(node_id_list: List[str]):
                   name
                 }
                 checkSuite {
+                  status
                   workflowRun {
                     event
                     runNumber
