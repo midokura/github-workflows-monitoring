@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.18
+# syntax=docker/dockerfile:1.22
 
 ARG PYTHON_VERSION=3.10
 
